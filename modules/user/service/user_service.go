@@ -39,9 +39,8 @@ func (s *userService) GetUserById(ctx context.Context, userId string) (dto.UserR
 		ID:         user.ID.String(),
 		Name:       user.Name,
 		Email:      user.Email,
-		TelpNumber: user.TelpNumber,
 		Role:       user.Role,
-		ImageUrl:   user.ImageUrl,
+		ImageUrl: user.ProfilePicture,
 		IsVerified: user.IsVerified,
 	}, nil
 }
@@ -58,9 +57,6 @@ func (s *userService) Update(ctx context.Context, req dto.UserUpdateRequest, use
 	if req.Email != "" {
 		user.Email = req.Email
 	}
-	if req.TelpNumber != "" {
-		user.TelpNumber = req.TelpNumber
-	}
 
 	updatedUser, err := s.userRepository.Update(ctx, s.db, user)
 	if err != nil {
@@ -70,7 +66,6 @@ func (s *userService) Update(ctx context.Context, req dto.UserUpdateRequest, use
 	return dto.UserUpdateResponse{
 		ID:         updatedUser.ID.String(),
 		Name:       updatedUser.Name,
-		TelpNumber: updatedUser.TelpNumber,
 		Role:       updatedUser.Role,
 		Email:      updatedUser.Email,
 		IsVerified: updatedUser.IsVerified,

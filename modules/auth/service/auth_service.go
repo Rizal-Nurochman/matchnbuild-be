@@ -65,7 +65,6 @@ func (s *authService) Register(ctx context.Context, req userDto.UserCreateReques
 		ID:         uuid.New(),
 		Name:       req.Name,
 		Email:      req.Email,
-		TelpNumber: req.TelpNumber,
 		Password:   hashedPassword,
 		Role:       "user",
 		IsVerified: false,
@@ -80,7 +79,6 @@ func (s *authService) Register(ctx context.Context, req userDto.UserCreateReques
 		ID:         createdUser.ID.String(),
 		Name:       createdUser.Name,
 		Email:      createdUser.Email,
-		TelpNumber: createdUser.TelpNumber,
 		Role:       createdUser.Role,
 		IsVerified: createdUser.IsVerified,
 	}, nil

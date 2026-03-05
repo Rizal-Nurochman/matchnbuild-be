@@ -10,6 +10,16 @@ func Migrate(db *gorm.DB) error {
 		&entities.Migration{},
 		&entities.User{},
 		&entities.RefreshToken{},
+		&entities.DesignerProfile{},
+		&entities.ProjectType{},
+		&entities.DesignItem{},
+		&entities.ProjectRequest{},
+		&entities.Quotation{},
+		&entities.Order{},
+		&entities.Deliverable{},
+		&entities.Review{},
+		&entities.Conversation{},
+		&entities.Message{},
 	); err != nil {
 		return err
 	}
