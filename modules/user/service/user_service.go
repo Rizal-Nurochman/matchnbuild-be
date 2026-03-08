@@ -40,7 +40,7 @@ func (s *userService) GetUserById(ctx context.Context, userId string) (dto.UserR
 		Name:       user.Name,
 		Email:      user.Email,
 		Role:       user.Role,
-		ImageUrl: user.ProfilePicture,
+		ProfilePicture: user.ProfilePicture,
 		IsVerified: user.IsVerified,
 	}, nil
 }
@@ -57,6 +57,9 @@ func (s *userService) Update(ctx context.Context, req dto.UserUpdateRequest, use
 	if req.Email != "" {
 		user.Email = req.Email
 	}
+	if req.ProfilePicture != "" {
+		user.ProfilePicture = req.ProfilePicture
+	}
 
 	updatedUser, err := s.userRepository.Update(ctx, s.db, user)
 	if err != nil {
@@ -68,6 +71,7 @@ func (s *userService) Update(ctx context.Context, req dto.UserUpdateRequest, use
 		Name:       updatedUser.Name,
 		Role:       updatedUser.Role,
 		Email:      updatedUser.Email,
+		ProfilePicture: updatedUser.ProfilePicture,
 		IsVerified: updatedUser.IsVerified,
 	}, nil
 }

@@ -15,7 +15,6 @@ func TestAuthValidation_ValidateRegisterRequest_Success(t *testing.T) {
 	req := userDto.UserCreateRequest{
 		Name:       "Test User",
 		Email:      "test@example.com",
-		TelpNumber: "12345678",
 		Password:   "password123",
 	}
 
@@ -30,7 +29,6 @@ func TestAuthValidation_ValidateRegisterRequest_InvalidEmail(t *testing.T) {
 	req := userDto.UserCreateRequest{
 		Name:       "Test User",
 		Email:      "invalid-email", // This will be caught by binding:"required,email" in DTO
-		TelpNumber: "12345678",
 		Password:   "password123",
 	}
 
@@ -47,7 +45,6 @@ func TestAuthValidation_ValidateRegisterRequest_ShortPassword(t *testing.T) {
 	req := userDto.UserCreateRequest{
 		Name:       "Test User",
 		Email:      "test@example.com",
-		TelpNumber: "12345678",
 		Password:   "123", // This will be caught by binding:"required,min=8" in DTO
 	}
 

@@ -103,6 +103,12 @@ func (c *authController) RefreshToken(ctx *gin.Context) {
 		return
 	}
 
+	if err := c.authValidation.ValidateRefreshTokenRequest(req); err != nil {
+    res := utils.BuildResponseFailed("Validation failed", err.Error(), nil)
+    ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
+    return
+	}
+
 	result, err := c.authService.RefreshToken(ctx.Request.Context(), req)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_REFRESH_TOKEN, err.Error(), nil)

@@ -2,7 +2,6 @@ package dto
 
 import (
 	"errors"
-	"mime/multipart"
 )
 
 const (
@@ -47,34 +46,32 @@ var (
 
 type (
 	UserCreateRequest struct {
-		Name       string                `json:"name" form:"name" binding:"required,min=2,max=100"`
-		TelpNumber string                `json:"telp_number" form:"telp_number" binding:"omitempty,min=8,max=20"`
-		Email      string                `json:"email" form:"email" binding:"required,email"`
-		Password   string                `json:"password" form:"password" binding:"required,min=8"`
-		Image      *multipart.FileHeader `json:"image" form:"image"`
+		Name       					string                `json:"name" form:"name" binding:"required,min=2,max=100"`
+		Email      					string                `json:"email" form:"email" binding:"required,email"`
+		Password   					string                `json:"password" form:"password" binding:"required,min=8"`
+		ProfilePicture			string								`json:"profile_picture"`
 	}
 
 	UserResponse struct {
-		ID         string `json:"id"`
-		Name       string `json:"name"`
-		Email      string `json:"email"`
-		TelpNumber string `json:"telp_number"`
-		Role       string `json:"role"`
-		ImageUrl   string `json:"image_url"`
-		IsVerified bool   `json:"is_verified"`
+		ID         			 string `json:"id"`
+		Name       		   string `json:"name"`
+		Email      			 string `json:"email"`
+		Role       			 string `json:"role"`
+		ProfilePicture   string `json:"profile_picture"`
+		IsVerified 			 bool   `json:"is_verified"`
 	}
 	UserUpdateRequest struct {
 		Name       string `json:"name" form:"name" binding:"omitempty,min=2,max=100"`
-		TelpNumber string `json:"telp_number" form:"telp_number" binding:"omitempty,min=8,max=20"`
 		Email      string `json:"email" form:"email" binding:"omitempty,email"`
+		ProfilePicture		string	`json:"profile_picture" binding:"omitempty"`
 	}
 
 	UserUpdateResponse struct {
 		ID         string `json:"id"`
 		Name       string `json:"name"`
-		TelpNumber string `json:"telp_number"`
 		Role       string `json:"role"`
 		Email      string `json:"email"`
+		ProfilePicture	string	`json:"profile_picture"`
 		IsVerified bool   `json:"is_verified"`
 	}
 
