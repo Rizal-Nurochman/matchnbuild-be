@@ -61,9 +61,12 @@ func main() {
 	server := gin.Default()
 	server.Use(middlewares.CORSMiddleware())
 
-	// Register module routes
-	user.RegisterRoutes(server, injector)
-	auth.RegisterRoutes(server, injector)
+	v1 := server.Group("/api/v1")
+	{
+		// Register module routes
+		user.RegisterRoutes(v1, injector)
+		auth.RegisterRoutes(v1, injector)
+	}
 
 	run(server)
 }

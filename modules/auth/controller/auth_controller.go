@@ -142,6 +142,12 @@ func (c *authController) SendVerificationEmail(ctx *gin.Context) {
 		return
 	}
 
+	if err := c.authValidation.ValidateSendVerificationEmailRequest(req); err != nil {
+		res := utils.BuildResponseFailed("Validation failed", err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
+		return
+	}
+
 	err := c.authService.SendVerificationEmail(ctx.Request.Context(), req)
 	if err != nil {
 		res := utils.BuildResponseFailed(userDto.MESSAGE_FAILED_PROSES_REQUEST, err.Error(), nil)
@@ -157,6 +163,12 @@ func (c *authController) VerifyEmail(ctx *gin.Context) {
 	var req userDto.VerifyEmailRequest
 	if err := ctx.ShouldBind(&req); err != nil {
 		res := utils.BuildResponseFailed(userDto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
+		return
+	}
+
+	if err := c.authValidation.ValidateVerifyEmailRequest(req); err != nil {
+		res := utils.BuildResponseFailed("Validation failed", err.Error(), nil)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
 		return
 	}
@@ -180,6 +192,12 @@ func (c *authController) SendPasswordReset(ctx *gin.Context) {
 		return
 	}
 
+	if err := c.authValidation.ValidateSendPasswordResetRequest(req); err != nil {
+		res := utils.BuildResponseFailed("Validation failed", err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
+		return
+	}
+
 	err := c.authService.SendPasswordReset(ctx.Request.Context(), req)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_SEND_PASSWORD_RESET, err.Error(), nil)
@@ -195,6 +213,12 @@ func (c *authController) ResetPassword(ctx *gin.Context) {
 	var req dto.ResetPasswordRequest
 	if err := ctx.ShouldBind(&req); err != nil {
 		res := utils.BuildResponseFailed(userDto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
+		return
+	}
+
+	if err := c.authValidation.ValidateResetPasswordRequest(req); err != nil {
+		res := utils.BuildResponseFailed("Validation failed", err.Error(), nil)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
 		return
 	}

@@ -6,10 +6,10 @@ import (
 	"github.com/samber/do"
 )
 
-func RegisterRoutes(server *gin.Engine, injector *do.Injector) {
+func RegisterRoutes(server *gin.RouterGroup, injector *do.Injector) {
 	authController := do.MustInvoke[controller.AuthController](injector)
 
-	authRoutes := server.Group("/api/auth")
+	authRoutes := server.Group("/auth")
 	{
 		authRoutes.POST("/register", authController.Register)
 		authRoutes.POST("/login", authController.Login)

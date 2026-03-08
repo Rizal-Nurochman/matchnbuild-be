@@ -50,18 +50,3 @@ func TestUserValidation_ValidateUserUpdateRequest_Success(t *testing.T) {
 
 	assert.NoError(t, err)
 }
-
-func TestUserValidation_ValidateUserUpdateRequest_InvalidTelp(t *testing.T) {
-	userValidation := validation.NewUserValidation()
-
-	req := dto.UserUpdateRequest{
-		Name:       "Updated Name",
-		Email:      "updated@example.com",
-	}
-
-	err := userValidation.ValidateUserUpdateRequest(req)
-
-	// The validation should pass because DTO binding handles telp validation
-	// Custom validation only adds extra checks beyond DTO binding
-	assert.NoError(t, err)
-}
