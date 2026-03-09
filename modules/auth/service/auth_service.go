@@ -76,6 +76,12 @@ func (s *authService) Register(ctx context.Context, req userDto.UserCreateReques
 		return userDto.UserResponse{}, err
 	}
 
+	go func() {
+		_ = s.SendVerificationEmail(context.Background(), userDto.SendVerificationEmailRequest{
+			Email: createdUser.Email,
+		})
+	}()
+
 	return userDto.UserResponse{
 		ID:         createdUser.ID.String(),
 		Name:       createdUser.Name,
