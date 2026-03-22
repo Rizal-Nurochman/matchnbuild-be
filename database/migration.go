@@ -16,6 +16,7 @@ func Migrate(db *gorm.DB) error {
 		&entities.ProjectRequest{},
 		&entities.Quotation{},
 		&entities.Order{},
+		&entities.Payment{},
 		&entities.Deliverable{},
 		&entities.Review{},
 		&entities.Conversation{},
