@@ -49,10 +49,11 @@ var (
 
 type (
 	UserCreateRequest struct {
-		Name       					string                `json:"name" form:"name" binding:"required,min=2,max=100"`
-		Email      					string                `json:"email" form:"email" binding:"required,email"`
-		Password   					string                `json:"password" form:"password" binding:"required,min=8"`
-		ProfilePicture			string								`json:"profile_picture"`
+		Name           string `json:"name" form:"name" binding:"required,min=2,max=100"`
+		Email          string `json:"email" form:"email" binding:"required,email"`
+		Password       string `json:"password" form:"password" binding:"required,min=8"`
+		Role           string `json:"role" form:"role" binding:"required,oneof=client designer"`
+		ProfilePicture string `json:"profile_picture"`
 	}
 
 	UserResponse struct {
