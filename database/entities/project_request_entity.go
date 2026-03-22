@@ -1,8 +1,6 @@
 package entities
 
 import (
-	"time"
-
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 )
@@ -17,10 +15,11 @@ type ProjectRequest struct {
 	LocationPhotoURL string          `gorm:"type:varchar(255)"`
 	LayoutSketchURL  string          `gorm:"type:varchar(255)"`
 	Status           string          `gorm:"type:varchar(50);not null;default:'Open'"`
-	CreatedAt        time.Time       `gorm:"type:timestamp with time zone;autoCreateTime"`
 
 	Client        User            `gorm:"foreignKey:ClientID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Designer      DesignerProfile `gorm:"foreignKey:DesignerID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Quotations    []Quotation     `gorm:"foreignKey:ProjectRequestID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Conversations []Conversation  `gorm:"foreignKey:ProjectRequestID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+
+	Timestamp
 }

@@ -2,6 +2,9 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"math/rand"
+	"time"
 
 	"github.com/Rizal-Nurochman/matchnbuild/database/entities"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/auth/dto"
@@ -103,6 +106,10 @@ func (s *authService) Login(ctx context.Context, req userDto.UserLoginRequest) (
 		return dto.TokenResponse{}, dto.ErrInvalidCredentials
 	}
 
+	if !user.IsVerified {
+		return dto.TokenResponse{}, userDto.ErrAccountNotVerified
+	}
+
 	accessToken := s.jwtService.GenerateAccessToken(user.ID.String(), user.Role)
 	refreshTokenString, expiresAt := s.jwtService.GenerateRefreshToken()
 
@@ -172,31 +179,49 @@ func (s *authService) SendVerificationEmail(ctx context.Context, req userDto.Sen
 		return userDto.ErrAccountAlreadyVerified
 	}
 
-	verificationToken := s.jwtService.GenerateAccessToken(user.ID.String(), "verification")
+	code := fmt.Sprintf("%06d", rand.Intn(900000)+100000)
+	expiry := time.Now().Add(15 * time.Minute)
+
+	user.VerificationCode = code
+	user.VerificationExpiry = &expiry
+
+	_, err = s.userRepository.Update(ctx, s.db, user)
+	if err != nil {
+		return err
+	}
 
 	subject := "Email Verification"
-	body := "Please verify your email using this token: " + verificationToken
+	body := fmt.Sprintf("Your verification code is: <b>%s</b>. This code will expire in 15 minutes.", code)
 
 	return utils.SendMail(user.Email, subject, body)
 }
 
 func (s *authService) VerifyEmail(ctx context.Context, req userDto.VerifyEmailRequest) (userDto.VerifyEmailResponse, error) {
-	token, err := s.jwtService.ValidateToken(req.Token)
-	if err != nil || !token.Valid {
-		return userDto.VerifyEmailResponse{}, userDto.ErrTokenInvalid
+	user, err := s.userRepository.GetUserByEmail(ctx, s.db, req.Email)
+	if err != nil {
+		return userDto.VerifyEmailResponse{}, userDto.ErrEmailNotFound
 	}
 
-	userId, err := s.jwtService.GetUserIDByToken(req.Token)
-	if err != nil {
-		return userDto.VerifyEmailResponse{}, userDto.ErrTokenInvalid
+	if user.IsVerified {
+		return userDto.VerifyEmailResponse{}, userDto.ErrAccountAlreadyVerified
 	}
 
-	user, err := s.userRepository.GetUserById(ctx, s.db, userId)
-	if err != nil {
-		return userDto.VerifyEmailResponse{}, userDto.ErrUserNotFound
+	if user.VerificationCode == "" || user.VerificationExpiry == nil {
+		return userDto.VerifyEmailResponse{}, userDto.ErrVerificationCodeInvalid
+	}
+
+	if time.Now().After(*user.VerificationExpiry) {
+		return userDto.VerifyEmailResponse{}, userDto.ErrVerificationCodeExpired
+	}
+
+	if user.VerificationCode != req.Code {
+		return userDto.VerifyEmailResponse{}, userDto.ErrVerificationCodeInvalid
 	}
 
 	user.IsVerified = true
+	user.VerificationCode = ""
+	user.VerificationExpiry = nil
+
 	updatedUser, err := s.userRepository.Update(ctx, s.db, user)
 	if err != nil {
 		return userDto.VerifyEmailResponse{}, err

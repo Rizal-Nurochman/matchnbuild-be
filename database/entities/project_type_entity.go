@@ -9,4 +9,6 @@ type ProjectType struct {
 	Name string    `gorm:"type:varchar(100);not null;uniqueIndex"`
 
 	DesignItems []DesignItem `gorm:"foreignKey:ProjectTypeID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+
+	Timestamp
 }

@@ -41,7 +41,10 @@ var (
 	ErrDeleteUser             = errors.New("failed to delete user")
 	ErrTokenInvalid           = errors.New("token invalid")
 	ErrTokenExpired           = errors.New("token expired")
-	ErrAccountAlreadyVerified = errors.New("account already verified")
+	ErrAccountAlreadyVerified    = errors.New("account already verified")
+	ErrAccountNotVerified        = errors.New("account not verified, please verify your email first")
+	ErrVerificationCodeInvalid   = errors.New("verification code is invalid")
+	ErrVerificationCodeExpired   = errors.New("verification code has expired")
 )
 
 type (
@@ -80,7 +83,8 @@ type (
 	}
 
 	VerifyEmailRequest struct {
-		Token string `json:"token" form:"token" binding:"required"`
+		Email string `json:"email" form:"email" binding:"required,email"`
+		Code  string `json:"code" form:"code" binding:"required,len=6"`
 	}
 
 	VerifyEmailResponse struct {
