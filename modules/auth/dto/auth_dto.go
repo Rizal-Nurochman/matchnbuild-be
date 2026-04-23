@@ -18,7 +18,7 @@ const (
 var (
 	ErrRefreshTokenNotFound = errors.New("refresh token not found")
 	ErrRefreshTokenExpired  = errors.New("refresh token expired")
-	ErrInvalidCredentials   = errors.New("invalid credentials")
+	ErrInvalidCredentials   = errors.New("email or password is not valid")
 	ErrPasswordResetToken   = errors.New("password reset token invalid")
 )
 
