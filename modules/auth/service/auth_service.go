@@ -11,6 +11,7 @@ import (
 	authRepo "github.com/Rizal-Nurochman/matchnbuild/modules/auth/repository"
 	userDto "github.com/Rizal-Nurochman/matchnbuild/modules/user/dto"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/user/repository"
+	"github.com/Rizal-Nurochman/matchnbuild/pkg/constants"
 	"github.com/Rizal-Nurochman/matchnbuild/pkg/helpers"
 	"github.com/Rizal-Nurochman/matchnbuild/pkg/utils"
 	"github.com/google/uuid"
@@ -69,13 +70,35 @@ func (s *authService) Register(ctx context.Context, req userDto.UserCreateReques
 		Name:       req.Name,
 		Email:      req.Email,
 		Password:   hashedPassword,
-		Role:           req.Role,
+		Role:       req.Role,
 		IsVerified: false,
 	}
 
-	createdUser, err := s.userRepository.Register(ctx, s.db, user)
+	tx := s.db.Begin()
+
+	createdUser, err := s.userRepository.Register(ctx, tx, user)
 	if err != nil {
+		tx.Rollback()
 		return userDto.UserResponse{}, err
+	}
+
+	if req.Role == constants.ENUM_ROLE_DESIGNER {
+		profile:=entities.DesignerProfile{
+			ID: uuid.New(),
+			UserID: user.ID,
+			IsAvailable: true,
+		}
+
+		err := tx.Create(&profile).Error
+		if err != nil {
+			tx.Rollback()
+			return userDto.UserResponse{}, err
+		}
+
+		err = tx.Commit().Error
+		if err != nil {
+			return userDto.UserResponse{}, err
+		}
 	}
 
 	go func() {
