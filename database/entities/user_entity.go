@@ -12,7 +12,7 @@ type User struct {
 	Email              string     `gorm:"type:varchar(255);uniqueIndex;not null"`
 	Password           string     `gorm:"type:varchar(255);not null"`
 	Role               string     `gorm:"type:varchar(50);not null;default:'client'"`
-	ProfilePicture     string     `gorm:"type:varchar(255)"`
+	ProfilePicture     *string     `gorm:"type:varchar(255)"`
 	IsVerified         bool       `gorm:"default:false;not null"`
 	VerificationCode   string     `gorm:"type:varchar(6)"`
 	VerificationExpiry *time.Time `gorm:"type:timestamp with time zone"`

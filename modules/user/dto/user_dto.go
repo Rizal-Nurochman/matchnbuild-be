@@ -53,7 +53,6 @@ type (
 		Email          string `json:"email" form:"email" binding:"required,email"`
 		Password       string `json:"password" form:"password" binding:"required,min=8"`
 		Role           string `json:"role" form:"role" binding:"required,oneof=client designer"`
-		ProfilePicture string `json:"profile_picture"`
 	}
 
 	UserResponse struct {
@@ -61,13 +60,13 @@ type (
 		Name       		   string `json:"name"`
 		Email      			 string `json:"email"`
 		Role       			 string `json:"role"`
-		ProfilePicture   string `json:"profile_picture"`
+		ProfilePicture   *string `json:"profile_picture"`
 		IsVerified 			 bool   `json:"is_verified"`
 	}
 	UserUpdateRequest struct {
 		Name       string `json:"name" form:"name" binding:"omitempty,min=2,max=100"`
 		Email      string `json:"email" form:"email" binding:"omitempty,email"`
-		ProfilePicture		string	`json:"profile_picture" binding:"omitempty"`
+		ProfilePicture		*string	`json:"profile_picture" binding:"omitempty"`
 	}
 
 	UserUpdateResponse struct {
@@ -75,7 +74,7 @@ type (
 		Name       string `json:"name"`
 		Role       string `json:"role"`
 		Email      string `json:"email"`
-		ProfilePicture	string	`json:"profile_picture"`
+		ProfilePicture	*string	`json:"profile_picture"`
 		IsVerified bool   `json:"is_verified"`
 	}
 

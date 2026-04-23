@@ -57,7 +57,7 @@ func (s *userService) Update(ctx context.Context, req dto.UserUpdateRequest, use
 	if req.Email != "" {
 		user.Email = req.Email
 	}
-	if req.ProfilePicture != "" {
+	if req.ProfilePicture != nil {
 		user.ProfilePicture = req.ProfilePicture
 	}
 
