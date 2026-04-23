@@ -42,13 +42,11 @@ func NewProjectRequestService(
 }
 
 func (s *projectRequestService) Create(ctx context.Context, req dto.ProjectRequestCreateRequest, clientID string) (dto.ProjectRequestResponse, error) {
-	// Validate designer exists
 	designerProfile, err := s.designerProfileRepo.GetByID(ctx, s.db, req.DesignerID)
 	if err != nil {
 		return dto.ProjectRequestResponse{}, dto.ErrDesignerProfileNotFound
 	}
 
-	// Prevent self-request
 	if designerProfile.UserID.String() == clientID {
 		return dto.ProjectRequestResponse{}, dto.ErrCannotRequestOwnDesign
 	}
@@ -63,7 +61,6 @@ func (s *projectRequestService) Create(ctx context.Context, req dto.ProjectReque
 		return dto.ProjectRequestResponse{}, fmt.Errorf("invalid designer id: %w", err)
 	}
 
-	// Start transaction: create ProjectRequest + Conversation
 	tx := s.db.Begin()
 
 	projectRequest := entities.ProjectRequest{
@@ -84,7 +81,6 @@ func (s *projectRequestService) Create(ctx context.Context, req dto.ProjectReque
 		return dto.ProjectRequestResponse{}, err
 	}
 
-	// Auto-create Conversation
 	conversation := entities.Conversation{
 		ID:               uuid.New(),
 		ProjectRequestID: createdPR.ID,

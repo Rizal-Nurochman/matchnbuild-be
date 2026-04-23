@@ -7,7 +7,7 @@ import (
 )
 
 type(
-	DesignerInterface interface {
+	DesignerRepository interface {
 		GetByID(ctx context.Context, tx *gorm.DB, id string) (entities.DesignerProfile, error)
     GetByUserID(ctx context.Context, tx *gorm.DB, userID string) (entities.DesignerProfile, error)
     Update(ctx context.Context, tx *gorm.DB, profile entities.DesignerProfile) (entities.DesignerProfile, error)
@@ -19,7 +19,7 @@ type(
 	}
 )
 
-func NewDesignerProfileRepository(db *gorm.DB) DesignerInterface {
+func NewDesignerProfileRepository(db *gorm.DB) DesignerRepository {
 	return &designerRepository{db: db}
 }
 
