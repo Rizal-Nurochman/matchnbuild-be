@@ -101,6 +101,11 @@ func (s *authService) Register(ctx context.Context, req userDto.UserCreateReques
 		}
 	}
 
+	err = tx.Commit().Error
+	if err != nil {
+		return userDto.UserResponse{}, err
+	}
+
 	go func() {
 		_ = s.SendVerificationEmail(context.Background(), userDto.SendVerificationEmailRequest{
 			Email: createdUser.Email,
