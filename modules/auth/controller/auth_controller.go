@@ -51,7 +51,6 @@ func (c *authController) Register(ctx *gin.Context) {
 		return
 	}
 
-	// Validate request
 	if err := c.authValidation.ValidateRegisterRequest(req); err != nil {
 		res := utils.BuildResponseFailed("Validation failed", err.Error(), nil)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
