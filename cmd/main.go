@@ -6,6 +6,7 @@ import (
 
 	"github.com/Rizal-Nurochman/matchnbuild/middlewares"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/auth"
+	"github.com/Rizal-Nurochman/matchnbuild/modules/designer"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/project_request"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/quotation"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/upload"
@@ -72,6 +73,7 @@ func main() {
 		upload.RegisterRoutes(v1, injector)
 		project_request.RegisterRoutes(v1, injector)
 		quotation.RegisterRoutes(v1, injector)
+		designer.RegisterRoutes(v1, injector)
 	}
 
 	run(server)
