@@ -94,11 +94,6 @@ func (s *authService) Register(ctx context.Context, req userDto.UserCreateReques
 			tx.Rollback()
 			return userDto.UserResponse{}, err
 		}
-
-		err = tx.Commit().Error
-		if err != nil {
-			return userDto.UserResponse{}, err
-		}
 	}
 
 	err = tx.Commit().Error

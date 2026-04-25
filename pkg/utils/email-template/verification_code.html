@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verify Your Email</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        background-color: #f4f6f9;
+        margin: 0;
+        padding: 0;
+      }
+      .wrapper {
+        max-width: 600px;
+        margin: 40px auto;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+      }
+      .header {
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        padding: 32px 24px;
+        text-align: center;
+      }
+      .header h1 {
+        color: #ffffff;
+        font-size: 22px;
+        margin: 0;
+        font-weight: 600;
+      }
+      .body {
+        padding: 32px 24px;
+      }
+      .greeting {
+        color: #1f2937;
+        font-size: 16px;
+        margin-bottom: 16px;
+      }
+      .message {
+        color: #6b7280;
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 24px;
+      }
+      .code-box {
+        text-align: center;
+        margin: 24px 0;
+      }
+      .code {
+        display: inline-block;
+        background-color: #f3f4f6;
+        border: 2px dashed #4f46e5;
+        border-radius: 8px;
+        padding: 16px 40px;
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: 8px;
+        color: #4f46e5;
+      }
+      .warning {
+        color: #9ca3af;
+        font-size: 13px;
+        text-align: center;
+        margin-top: 8px;
+      }
+      .footer {
+        background-color: #f9fafb;
+        padding: 20px 24px;
+        text-align: center;
+        border-top: 1px solid #e5e7eb;
+      }
+      .footer p {
+        color: #9ca3af;
+        font-size: 12px;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="header">
+        <h1>📧 Email Verification</h1>
+      </div>
+      <div class="body">
+        <p class="greeting">Hello, <strong>{{ .Name }}</strong>!</p>
+        <p class="message">
+          Thank you for registering on <strong>MatchnBuild</strong>. To complete
+          your registration, please use the verification code below:
+        </p>
+        <div class="code-box">
+          <div class="code">{{ .Code }}</div>
+        </div>
+        <p class="warning">
+          This code will expire in <strong>15 minutes</strong>. Do not share
+          this code with anyone.
+        </p>
+      </div>
+      <div class="footer">
+        <p>If you didn't create an account, you can safely ignore this email.</p>
+        <p style="margin-top: 8px">&copy; 2026 MatchnBuild. All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>
