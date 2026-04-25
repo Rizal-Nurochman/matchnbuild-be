@@ -1,6 +1,9 @@
 package utils
 
 import (
+	"bytes"
+	"html/template"
+
 	"github.com/Rizal-Nurochman/matchnbuild/config"
 
 	"gopkg.in/gomail.v2"
@@ -31,4 +34,19 @@ func SendMail(toEmail string, subject string, body string) error {
 	}
 
 	return nil
+}
+
+func RenderEmailTemplate(templatePath string, data interface{}) (string, error)  {
+	tmpl, err := template.ParseFiles(templatePath)
+	if err != nil {
+		return "", err
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, data)
+	if err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
 }

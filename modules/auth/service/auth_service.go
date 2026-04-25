@@ -212,9 +212,21 @@ func (s *authService) SendVerificationEmail(ctx context.Context, req userDto.Sen
 	}
 
 	subject := "Email Verification"
-	body := fmt.Sprintf("Your verification code is: <b>%s</b>. This code will expire in 15 minutes.", code)
 
-	return utils.SendMail(user.Email, subject, body)
+	data := struct {
+		Name string
+		Code string
+	}{
+		Name: user.Name,
+		Code: code,
+	}
+
+	result, err := utils.RenderEmailTemplate("pkg/utils/email-template/verification_code.html", data)
+	if err != nil {
+		return err
+	}
+
+	return utils.SendMail(user.Email, subject, result)
 }
 
 func (s *authService) VerifyEmail(ctx context.Context, req userDto.VerifyEmailRequest) (userDto.VerifyEmailResponse, error) {
@@ -263,9 +275,21 @@ func (s *authService) SendPasswordReset(ctx context.Context, req dto.SendPasswor
 	resetToken := s.jwtService.GenerateAccessToken(user.ID.String(), "password_reset")
 
 	subject := "Password Reset"
-	body := "Please reset your password using this token: " + resetToken
+	
+	data := struct {
+		Name string
+		Token string
+	}{
+		Name: user.Name,
+		Token: resetToken,
+	}
 
-	return utils.SendMail(user.Email, subject, body)
+	result, err := utils.RenderEmailTemplate("pkg/utils/email-template/password_reset.html", data)
+	if err != nil {
+		return err
+	}
+
+	return utils.SendMail(user.Email, subject, result)
 }
 
 func (s *authService) ResetPassword(ctx context.Context, req dto.ResetPasswordRequest) error {

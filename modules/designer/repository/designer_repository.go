@@ -43,7 +43,7 @@ func (r *designerRepository) GetByUserID(ctx context.Context, tx *gorm.DB, userI
 	}
 
 	var profile entities.DesignerProfile
-	err := tx.WithContext(ctx).Where("user_id = ?", userID).Take(&profile).Error
+	err := tx.WithContext(ctx).Preload("User").Where("user_id = ?", userID).Take(&profile).Error
 	if err != nil {
 		return profile, err
 	}
@@ -57,7 +57,7 @@ func (r *designerRepository) GetByID(ctx context.Context, tx *gorm.DB, id string
 	}
 
 	var profile entities.DesignerProfile
-	err := tx.WithContext(ctx).Where("id = ?", id).Take(&profile).Error
+	err := tx.WithContext(ctx).Preload("User").Where("id = ?", id).Take(&profile).Error
 	if err != nil {
 		return profile, err
 	}
