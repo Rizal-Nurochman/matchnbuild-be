@@ -41,7 +41,7 @@ func (h *designerProfileHandler) GetAll(ctx *gin.Context)  {
 
 	designers, total, err := pagination.PaginatedQueryWithIncludable[query.Designer](h.db, filter)
 	if err != nil {
-		res:=utils.BuildResponseFailed(dto.ErrDesignerProfileNotFound.Error(), err.Error(), nil)
+		res:=utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DESIGNER_PROFILE, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
@@ -88,5 +88,14 @@ func (h *designerProfileHandler) Update(ctx *gin.Context)  {
 		return
 	}
 
+	userID := ctx.MustGet("user_id").(string)
+	result, err := h.designerService.Update(ctx.Request.Context(), userID, req)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_UPDATE_DESIGNER_PROFILE, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
 
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_UPDATE_DESIGNER_PROFILE, result)
+	ctx.JSON(http.StatusOK, res)
 }

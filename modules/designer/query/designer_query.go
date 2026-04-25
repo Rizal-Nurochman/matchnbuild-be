@@ -22,7 +22,7 @@ type DesignerFilter struct {
 }
 
 func (f *DesignerFilter) ApplyFilters(query *gorm.DB) *gorm.DB {
-	query = query.Joins("JOIN users ON users.id = designer_profiles.users_id").Select("designer_profiles.*, users.name, users.profile_picture")
+	query = query.Joins("JOIN users ON users.id = designer_profiles.user_id").Select("designer_profiles.*, users.name, users.profile_picture")
 	return query
 }
 

@@ -5,6 +5,9 @@ import (
 	authController "github.com/Rizal-Nurochman/matchnbuild/modules/auth/controller"
 	authRepo "github.com/Rizal-Nurochman/matchnbuild/modules/auth/repository"
 	authService "github.com/Rizal-Nurochman/matchnbuild/modules/auth/service"
+	designerRepo "github.com/Rizal-Nurochman/matchnbuild/modules/designer/repository"
+	designerService "github.com/Rizal-Nurochman/matchnbuild/modules/designer/service"
+	designerController "github.com/Rizal-Nurochman/matchnbuild/modules/designer/controller"
 	prController "github.com/Rizal-Nurochman/matchnbuild/modules/project_request/controller"
 	prRepo "github.com/Rizal-Nurochman/matchnbuild/modules/project_request/repository"
 	prService "github.com/Rizal-Nurochman/matchnbuild/modules/project_request/service"
@@ -43,12 +46,14 @@ func RegisterDependencies(injector *do.Injector) {
 	designerProfileRepository := prRepo.NewDesignerProfileRepository(db)
 	quotationRepository := qRepo.NewQuotationRepository(db)
 	orderRepository := qRepo.NewOrderRepository(db)
+	designerRepository := designerRepo.NewDesignerProfileRepository(db)
 
 	// Services
 	userSvc := userService.NewUserService(userRepository, db)
 	authSvc := authService.NewAuthService(userRepository, refreshTokenRepository, jwtService, db)
 	projectRequestSvc := prService.NewProjectRequestService(projectRequestRepository, conversationRepository, designerProfileRepository, db)
 	quotationSvc := qService.NewQuotationService(quotationRepository, orderRepository, projectRequestRepository, designerProfileRepository, db)
+	designerSvc := designerService.NewDesignerProfileService(designerRepository)
 
 	// Controllers
 	do.Provide(
@@ -72,6 +77,12 @@ func RegisterDependencies(injector *do.Injector) {
 	do.Provide(
 		injector, func(i *do.Injector) (qController.QuotationController, error) {
 			return qController.NewQuotationController(quotationSvc), nil
+		},
+	)
+
+	do.Provide(
+		injector, func(i *do.Injector) (designerController.DesignerProfileHandler, error) {
+			return designerController.NewDesignerProfileHandler(i, designerSvc), nil
 		},
 	)
 }
