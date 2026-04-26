@@ -1,18 +1,44 @@
 [
   {
-    "name": "admin",
-    "telp_number": "08123456789",
-    "email": "admin1234@gmail.com",
-    "password": "admin1234",
-    "role": "admin",
+    "name": "Axel",
+    "email": "axel123@gmail.com",
+    "password": "axel1234",
+    "role": "client",
     "is_verified": true
   },
   {
-    "name": "user",
-    "telp_number": "08123456789",
-    "email": "user1234@gmail.com",
-    "password": "user1234",
-    "role": "user",
+    "name": "Hiero",
+    "email": "hiero123@gmail.com",
+    "password": "hiero1234",
+    "role": "client",
+    "is_verified": true
+  },
+  {
+    "name": "Ristul",
+    "email": "ristul123@gmail.com",
+    "password": "ristul1234",
+    "role": "designer",
+    "is_verified": true
+  },
+  {
+    "name": "Faisal",
+    "email": "faisal123@gmail.com",
+    "password": "faisal1234",
+    "role": "designer",
+    "is_verified": true
+  },
+  {
+    "name": "Taqin",
+    "email": "taqin123@gmail.com",
+    "password": "taqin1234",
+    "role": "client",
+    "is_verified": true
+  },
+  {
+    "name": "Fikhlas",
+    "email": "fikhlas123@gmail.com",
+    "password": "fikhlas1234",
+    "role": "designer",
     "is_verified": true
   }
 ]
