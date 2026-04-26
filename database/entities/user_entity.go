@@ -17,6 +17,7 @@ type User struct {
 	VerificationCode   string     `gorm:"type:varchar(6)"`
 	VerificationExpiry *time.Time `gorm:"type:timestamp with time zone"`
 
+	Preference 			*UserPreference	 `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	DesignerProfile *DesignerProfile `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	ProjectRequests []ProjectRequest `gorm:"foreignKey:ClientID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Messages        []Message        `gorm:"foreignKey:SenderID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`

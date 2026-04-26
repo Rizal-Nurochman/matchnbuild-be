@@ -9,9 +9,9 @@ func Migrate(db *gorm.DB) error {
 	if err := db.AutoMigrate(
 		&entities.Migration{},
 		&entities.User{},
+		&entities.UserPreference{},
 		&entities.RefreshToken{},
 		&entities.DesignerProfile{},
-		&entities.ProjectType{},
 		&entities.DesignItem{},
 		&entities.ProjectRequest{},
 		&entities.Quotation{},
@@ -21,6 +21,8 @@ func Migrate(db *gorm.DB) error {
 		&entities.Review{},
 		&entities.Conversation{},
 		&entities.Message{},
+		&entities.Feature{},
+		&entities.DesignItemFeature{},
 	); err != nil {
 		return err
 	}
