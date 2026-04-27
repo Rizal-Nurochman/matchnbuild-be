@@ -5,13 +5,17 @@ import (
 
 	"github.com/Rizal-Nurochman/matchnbuild/modules/design_item/dto"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/design_item/service"
+	"github.com/Rizal-Nurochman/matchnbuild/pkg/constants"
 	"github.com/Rizal-Nurochman/matchnbuild/pkg/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/samber/do"
+	"gorm.io/gorm"
 )
 
 type (
 	designItemHandler struct {
 		designItemService service.DesignItemService
+		db                *gorm.DB
 	}
 
 	DesignItemHandler interface {
@@ -24,8 +28,9 @@ type (
 	}
 )
 
-func NewDesignItemHandler(designItemService service.DesignItemService) DesignItemHandler {
-	return &designItemHandler{designItemService: designItemService}
+func NewDesignItemHandler(injector *do.Injector, designItemService service.DesignItemService) DesignItemHandler {
+	db := do.MustInvokeNamed[*gorm.DB](injector, constants.DB)
+	return &designItemHandler{designItemService: designItemService, db: db}
 }
 
 func (h *designItemHandler) Create(ctx *gin.Context) {
