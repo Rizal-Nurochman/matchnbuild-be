@@ -66,10 +66,14 @@ func (s *designItemService) Create(ctx context.Context, userID string, req dto.D
 		Title:           req.Title,
 		Description:     req.Description,
 		Style:           req.Style,
-		LandArea:        req.LandArea,
+		Category:        req.Category,
+		LandAreaMin:     req.LandAreaMin,
+		LandAreaMax:     req.LandAreaMax,
 		BuildingArea:    req.BuildingArea,
 		NumFloors:       req.NumFloors,
 		NumBedrooms:     req.NumBedrooms,
+		RoomType:        req.RoomType,
+		RoomArea:        req.RoomArea,
 		EstimatedBudget: decimal.NewFromFloat(req.EstimatedBudget),
 		PriceStartFrom:  decimal.NewFromFloat(req.PriceStartFrom),
 		ImageURL:        req.ImageURL,
@@ -155,24 +159,32 @@ func (s *designItemService) Update(ctx context.Context, userID string, designIte
 	if req.Style != "" {
 		item.Style = req.Style
 	}
-	if req.LandArea != nil {
-		item.LandArea = *req.LandArea
+	if req.Category != "" {
+		item.Category = req.Category
+	}
+	if req.LandAreaMin != nil {
+		item.LandAreaMin = req.LandAreaMin
+	}
+	if req.LandAreaMax != nil {
+		item.LandAreaMax = req.LandAreaMax
 	}
 	if req.BuildingArea != nil {
-		item.BuildingArea = *req.BuildingArea
+		item.BuildingArea = req.BuildingArea
 	}
 	if req.NumFloors != nil {
-		item.NumFloors = *req.NumFloors
+		item.NumFloors = req.NumFloors
 	}
 	if req.NumBedrooms != nil {
 		item.NumBedrooms = req.NumBedrooms
 	}
-	if req.EstimatedBudget != nil {
-		item.EstimatedBudget = decimal.NewFromFloat(*req.EstimatedBudget)
+	if req.RoomType != nil {
+		item.RoomType = req.RoomType
 	}
-	if req.PriceStartFrom != nil {
-		item.PriceStartFrom = decimal.NewFromFloat(*req.PriceStartFrom)
+	if req.RoomArea != nil {
+		item.RoomArea = req.RoomArea
 	}
+	item.EstimatedBudget = decimal.NewFromFloat(req.EstimatedBudget)
+	item.PriceStartFrom = decimal.NewFromFloat(req.PriceStartFrom)
 	if req.ImageURL != "" {
 		item.ImageURL = req.ImageURL
 	}

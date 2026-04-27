@@ -28,10 +28,14 @@ type (
 		Title           string   `json:"title" binding:"required,max=200"`
 		Description     string   `json:"description" binding:"omitempty,max=2000"`
 		Style           string   `json:"style" binding:"required,max=50"`
-		LandArea        float64  `json:"land_area" binding:"required,gt=0"`
-		BuildingArea    float64  `json:"building_area" binding:"required,gt=0"`
-		NumFloors       int      `json:"num_floors" binding:"required,min=1,max=10"`
+		Category 				string			`json:"category" binding:"required,max=50"`
+		LandAreaMin     *float64  `json:"land_area_min" binding:"omitempty,gt=0"`
+		LandAreaMax     *float64    `json:"land_area_max" binding:"omitempty,gt=0"`
+		BuildingArea    *float64  `json:"building_area" binding:"omitempty,gt=0"`
+		NumFloors       *int      `json:"num_floors" binding:"omitempty,min=1,max=10"`
 		NumBedrooms     *int     `json:"num_bedrooms" binding:"omitempty,min=0,max=20"`
+		RoomType        *string    `json:"room_type" binding:"omitempty,max=50"`
+		RoomArea			  *float64    `json:"room_area" binding:"omitempty,gt=0"`
 		EstimatedBudget float64  `json:"estimated_budget" binding:"required,gt=0"`
 		PriceStartFrom  float64  `json:"price_start_from" binding:"required,gt=0"`
 		ImageURL        string   `json:"image_url" binding:"omitempty,url"`
@@ -39,15 +43,19 @@ type (
 	}
 
 	DesignItemUpdateRequest struct {
-		Title           string   `json:"title" binding:"omitempty,max=200"`
+		Title           string   `json:"title" binding:"required,max=200"`
 		Description     string   `json:"description" binding:"omitempty,max=2000"`
-		Style           string   `json:"style" binding:"omitempty,max=50"`
-		LandArea        *float64 `json:"land_area" binding:"omitempty,gt=0"`
-		BuildingArea    *float64 `json:"building_area" binding:"omitempty,gt=0"`
-		NumFloors       *int     `json:"num_floors" binding:"omitempty,min=1,max=10"`
+		Style           string   `json:"style" binding:"required,max=50"`
+		Category 				string			`json:"category" binding:"required,max=50"`
+		LandAreaMin     *float64  `json:"land_area_min" binding:"omitempty,gt=0"`
+		LandAreaMax     *float64    `json:"land_area_max" binding:"omitempty,gt=0"`
+		BuildingArea    *float64  `json:"building_area" binding:"omitempty,gt=0"`
+		NumFloors       *int      `json:"num_floors" binding:"omitempty,min=1,max=10"`
 		NumBedrooms     *int     `json:"num_bedrooms" binding:"omitempty,min=0,max=20"`
-		EstimatedBudget *float64 `json:"estimated_budget" binding:"omitempty,gt=0"`
-		PriceStartFrom  *float64 `json:"price_start_from" binding:"omitempty,gt=0"`
+		RoomType        *string    `json:"room_type" binding:"omitempty,max=50"`
+		RoomArea			  *float64    `json:"room_area" binding:"omitempty,gt=0"`
+		EstimatedBudget float64  `json:"estimated_budget" binding:"required,gt=0"`
+		PriceStartFrom  float64  `json:"price_start_from" binding:"required,gt=0"`
 		ImageURL        string   `json:"image_url" binding:"omitempty,url"`
 		FeatureIDs      []string `json:"feature_ids" binding:"omitempty"`
 	}
@@ -64,10 +72,14 @@ type (
 		Title           string            `json:"title"`
 		Description     string            `json:"description"`
 		Style           string            `json:"style"`
-		LandArea        float64           `json:"land_area"`
-		BuildingArea    float64           `json:"building_area"`
-		NumFloors       int               `json:"num_floors"`
+		Category				string						`json:"category"`
+		LandAreaMin     *float64           `json:"land_area_min"`
+		LandAreaMax			*float64           `json:"land_area_max"`
+		BuildingArea    *float64           `json:"building_area"`
+		NumFloors       *int               `json:"num_floors"`
 		NumBedrooms     *int              `json:"num_bedrooms"`
+		RoomType 				*string						`json:"room_type"`
+		RoomArea				*float64	          `json:"room_area"`		
 		EstimatedBudget string            `json:"estimated_budget"`
 		PriceStartFrom  string            `json:"price_start_from"`
 		ImageURL        string            `json:"image_url"`
@@ -91,10 +103,14 @@ func ToDesignItemResponse(item entities.DesignItem) DesignItemResponse {
 		Title:           item.Title,
 		Description:     item.Description,
 		Style:           item.Style,
-		LandArea:        item.LandArea,
+		Category:        item.Category,
+		LandAreaMin:     item.LandAreaMin,
+		LandAreaMax:     item.LandAreaMax,
 		BuildingArea:    item.BuildingArea,
 		NumFloors:       item.NumFloors,
 		NumBedrooms:     item.NumBedrooms,
+		RoomType:        item.RoomType,
+		RoomArea:        item.RoomArea,
 		EstimatedBudget: item.EstimatedBudget.String(),
 		PriceStartFrom:  item.PriceStartFrom.String(),
 		ImageURL:        item.ImageURL,
