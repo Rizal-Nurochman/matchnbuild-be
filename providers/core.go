@@ -17,6 +17,9 @@ import (
 	userController "github.com/Rizal-Nurochman/matchnbuild/modules/user/controller"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/user/repository"
 	userService "github.com/Rizal-Nurochman/matchnbuild/modules/user/service"
+	desigItemRepo "github.com/Rizal-Nurochman/matchnbuild/modules/design_item/repository"
+	desigItemService "github.com/Rizal-Nurochman/matchnbuild/modules/design_item/service"
+	designItemHandler "github.com/Rizal-Nurochman/matchnbuild/modules/design_item/controller"
 	"github.com/Rizal-Nurochman/matchnbuild/pkg/constants"
 	"github.com/samber/do"
 	"gorm.io/gorm"
@@ -47,6 +50,7 @@ func RegisterDependencies(injector *do.Injector) {
 	quotationRepository := qRepo.NewQuotationRepository(db)
 	orderRepository := qRepo.NewOrderRepository(db)
 	designerRepository := designerRepo.NewDesignerProfileRepository(db)
+	designItemRepository := desigItemRepo.NewDesignItemRepository(db)
 
 	// Services
 	userSvc := userService.NewUserService(userRepository, db)
@@ -54,6 +58,7 @@ func RegisterDependencies(injector *do.Injector) {
 	projectRequestSvc := prService.NewProjectRequestService(projectRequestRepository, conversationRepository, designerProfileRepository, db)
 	quotationSvc := qService.NewQuotationService(quotationRepository, orderRepository, projectRequestRepository, designerProfileRepository, db)
 	designerSvc := designerService.NewDesignerProfileService(designerRepository)
+	desigItemSvc := desigItemService.NewDesignItemService(designItemRepository, designerRepository, db)
 
 	// Controllers
 	do.Provide(
@@ -83,6 +88,12 @@ func RegisterDependencies(injector *do.Injector) {
 	do.Provide(
 		injector, func(i *do.Injector) (designerController.DesignerProfileHandler, error) {
 			return designerController.NewDesignerProfileHandler(i, designerSvc), nil
+		},
+	)
+
+	do.Provide(
+		injector, func(i *do.Injector) (designItemHandler.DesignItemHandler, error) {
+			return designItemHandler.NewDesignItemHandler(i, desigItemSvc), nil
 		},
 	)
 }
