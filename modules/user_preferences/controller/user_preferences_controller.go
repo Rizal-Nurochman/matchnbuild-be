@@ -42,7 +42,7 @@ func (h *userPreferenceHandler) Create(ctx *gin.Context) {
 	userID := ctx.MustGet("user_id").(string)
 	result, err := h.userPreferenceService.Create(ctx.Request.Context(), userID, req)
 	if err != nil {
-		res := utils.BuildResponseFailed(dto.ErrPreferenceNotFound.Error(), err.Error(), nil)
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_PREFERENCE, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
@@ -82,6 +82,6 @@ func (h *userPreferenceHandler) Update(ctx *gin.Context)  {
 		return
 	}
 
-	res := utils.BuildResponseSuccess(dto.MESSAGE_FAILED_UPDATE_PREFERENCE, result)
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_UPDATE_PREFERENCE, result)
 	ctx.JSON(http.StatusOK, res)
 }

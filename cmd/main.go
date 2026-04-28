@@ -12,6 +12,7 @@ import (
 	"github.com/Rizal-Nurochman/matchnbuild/modules/quotation"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/upload"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/user"
+	"github.com/Rizal-Nurochman/matchnbuild/modules/user_preferences"
 	"github.com/Rizal-Nurochman/matchnbuild/providers"
 	"github.com/Rizal-Nurochman/matchnbuild/script"
 	"github.com/samber/do"
@@ -76,6 +77,7 @@ func main() {
 		quotation.RegisterRoutes(v1, injector)
 		designer.RegisterRoutes(v1, injector)
 		design_item.RegisterRoutes(v1, injector)
+		user_preferences.RegisterRoutes(v1, injector)
 	}
 
 	run(server)

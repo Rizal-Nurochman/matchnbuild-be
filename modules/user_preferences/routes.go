@@ -15,8 +15,8 @@ func RegisterRoutes(server *gin.RouterGroup, injector *do.Injector) {
 
 	userPreferenceRouter := server.Group("/user-preferences")
 	{
-		userPreferenceRouter.GET("/:id", middlewares.Authenticate(JwtSvc), userPreferenceHandler.GetByID)
+		userPreferenceRouter.GET("/me", middlewares.Authenticate(JwtSvc), userPreferenceHandler.GetByID)
 		userPreferenceRouter.POST("", middlewares.Authenticate(JwtSvc), userPreferenceHandler.Create)
-		userPreferenceRouter.PATCH("/:id", middlewares.Authenticate(JwtSvc), userPreferenceHandler.Update)
+		userPreferenceRouter.PATCH("/me", middlewares.Authenticate(JwtSvc), userPreferenceHandler.Update)
 	}
 }
