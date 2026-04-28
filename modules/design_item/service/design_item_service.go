@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Rizal-Nurochman/matchnbuild/database/entities"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/design_item/dto"
@@ -42,12 +43,24 @@ func NewDesignItemService(
 	}
 }
 
-
-
 func (s *designItemService) Create(ctx context.Context, userID string, req dto.DesignItemCreateRequest) (dto.DesignItemResponse, error) {
 	designer, err := s.designerRepo.GetByUserID(ctx, nil, userID)
 	if err != nil {
 		return dto.DesignItemResponse{}, dto.ErrDesignItemNotFound
+	}
+
+	switch req.Category {
+	case "architecture":
+		if req.LandAreaMin == nil || req.LandAreaMax == nil || 
+			req.BuildingArea == nil || req.NumFloors == nil {
+				return dto.DesignItemResponse{}, errors.New("Field arsitektur harus diisi!")
+		}
+	case "interior":
+		if req.RoomType == nil || req.RoomArea == nil {
+			return dto.DesignItemResponse{}, errors.New("Field interior harus diisi!")
+		}
+	default:
+		return dto.DesignItemResponse{}, errors.New("Kategori harus 'Arsitektur' atau 'Interior'")
 	}
 
 	var features []entities.DesignItemFeature
@@ -108,7 +121,7 @@ func (s *designItemService) GetAll(ctx context.Context) ([]dto.DesignItemRespons
 	return result, nil
 }
 
-func (s *designItemService) GetAllFeatures(ctx context.Context, category string) ([]dto.FeatureResponse, error)  {
+func (s *designItemService) GetAllFeatures(ctx context.Context, category string) ([]dto.FeatureResponse, error) {
 	var features []entities.Feature
 	var err error
 
@@ -125,7 +138,7 @@ func (s *designItemService) GetAllFeatures(ctx context.Context, category string)
 	var result []dto.FeatureResponse
 	for _, data := range features {
 		result = append(result, dto.FeatureResponse{
-			ID: data.ID.String(),
+			ID:   data.ID.String(),
 			Name: data.Name,
 		})
 	}
@@ -176,43 +189,47 @@ func (s *designItemService) Update(ctx context.Context, userID string, designIte
 		return dto.DesignItemResponse{}, dto.ErrNotDesignItemOwner
 	}
 
-	if req.Title != "" {
-		item.Title = req.Title
+	if req.Title != nil {
+    item.Title = *req.Title    
 	}
-	if req.Description != "" {
-		item.Description = req.Description
+	if req.Description != nil {
+			item.Description = *req.Description  
 	}
-	if req.Style != "" {
-		item.Style = req.Style
+	if req.Style != nil {
+			item.Style = *req.Style
 	}
-	if req.Category != "" {
-		item.Category = req.Category
+	if req.Category != nil {
+			item.Category = *req.Category
 	}
 	if req.LandAreaMin != nil {
-		item.LandAreaMin = req.LandAreaMin
+			item.LandAreaMin = req.LandAreaMin   
 	}
 	if req.LandAreaMax != nil {
-		item.LandAreaMax = req.LandAreaMax
+			item.LandAreaMax = req.LandAreaMax
 	}
 	if req.BuildingArea != nil {
-		item.BuildingArea = req.BuildingArea
+			item.BuildingArea = req.BuildingArea
 	}
 	if req.NumFloors != nil {
-		item.NumFloors = req.NumFloors
+			item.NumFloors = req.NumFloors
 	}
 	if req.NumBedrooms != nil {
-		item.NumBedrooms = req.NumBedrooms
+			item.NumBedrooms = req.NumBedrooms
 	}
 	if req.RoomType != nil {
-		item.RoomType = req.RoomType
+			item.RoomType = req.RoomType
 	}
 	if req.RoomArea != nil {
-		item.RoomArea = req.RoomArea
+			item.RoomArea = req.RoomArea
 	}
-	item.EstimatedBudget = decimal.NewFromFloat(req.EstimatedBudget)
-	item.PriceStartFrom = decimal.NewFromFloat(req.PriceStartFrom)
+	if req.EstimatedBudget != nil {
+			item.EstimatedBudget = decimal.NewFromFloat(*req.EstimatedBudget)
+	}
+	if req.PriceStartFrom != nil {
+			item.PriceStartFrom = decimal.NewFromFloat(*req.PriceStartFrom)
+	}
 	if req.ImageURL != "" {
-		item.ImageURL = req.ImageURL
+			item.ImageURL = req.ImageURL
 	}
 
 	if req.FeatureIDs != nil {

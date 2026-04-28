@@ -75,7 +75,7 @@ func (h *designItemHandler) GetAllFeatures(ctx *gin.Context)  {
 		return
 	}
 
-	res := utils.BuildResponseSuccess(dto.MESSGAE_SUCCESS_GET_FEATURES, items)
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_FEATURES, items)
 	ctx.JSON(http.StatusOK, res)
 }
 

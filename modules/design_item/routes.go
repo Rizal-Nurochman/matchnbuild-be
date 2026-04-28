@@ -19,7 +19,7 @@ func RegisterRoutes(server *gin.RouterGroup, injector *do.Injector) {
 		designItemRouter.GET("/my-items", middlewares.Authenticate(JwtSvc), designItemHandler.GetMyItems)
 		designItemRouter.GET("/:id", designItemHandler.GetByID)
 		designItemRouter.POST("", middlewares.Authenticate(JwtSvc), designItemHandler.Create)
-		designItemRouter.PUT("/:id", middlewares.Authenticate(JwtSvc), designItemHandler.Update)
+		designItemRouter.PATCH("/:id", middlewares.Authenticate(JwtSvc), designItemHandler.Update)
 		designItemRouter.DELETE("/:id", middlewares.Authenticate(JwtSvc), designItemHandler.Delete)
 	}
 
