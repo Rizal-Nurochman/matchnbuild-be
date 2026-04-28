@@ -22,4 +22,9 @@ func RegisterRoutes(server *gin.RouterGroup, injector *do.Injector) {
 		designItemRouter.PUT("/:id", middlewares.Authenticate(JwtSvc), designItemHandler.Update)
 		designItemRouter.DELETE("/:id", middlewares.Authenticate(JwtSvc), designItemHandler.Delete)
 	}
+
+	featuresRouter := server.Group("/features")
+	{
+		featuresRouter.GET("", designItemHandler.GetAllFeatures)
+	}
 }

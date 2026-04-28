@@ -1,6 +1,15 @@
 [
-  {"name":"Taman"},
-  {"name":"Rooftop"},
-  {"name":"Kolam Renang"},
-  {"name":"Taman Bermain Anak-anak"}
+  {"name": "Taman", "category": "architecture"},
+  {"name": "Rooftop", "category": "architecture"},
+  {"name": "Kolam Renang", "category": "architecture"},
+  {"name": "Taman Bermain Anak-anak", "category": "architecture"},
+  {"name": "Carport", "category": "architecture"},
+  {"name": "Balkon", "category": "architecture"},
+  {"name": "Panel Surya", "category": "architecture"},
+  {"name": "Walk-in Closet", "category": "interior"},
+  {"name": "Kitchen Island", "category": "interior"},
+  {"name": "Built-in Furniture", "category": "interior"},
+  {"name": "Pencahayaan Alami", "category": "interior"},
+  {"name": "Accent Wall", "category": "interior"},
+  {"name": "Hidden Storage", "category": "interior"}
 ]

@@ -21,6 +21,7 @@ type (
 	DesignItemHandler interface {
 		Create(ctx *gin.Context)
 		GetAll(ctx *gin.Context)
+		GetAllFeatures(ctx *gin.Context)
 		GetByID(ctx *gin.Context)
 		GetMyItems(ctx *gin.Context)
 		Update(ctx *gin.Context)
@@ -62,6 +63,19 @@ func (h *designItemHandler) GetAll(ctx *gin.Context) {
 	}
 
 	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_DESIGN_ITEM, items)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (h *designItemHandler) GetAllFeatures(ctx *gin.Context)  {
+	category := ctx.Query("category")
+	items, err := h.designItemService.GetAllFeatures(ctx.Request.Context(), category)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_FEATURES, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess(dto.MESSGAE_SUCCESS_GET_FEATURES, items)
 	ctx.JSON(http.StatusOK, res)
 }
 

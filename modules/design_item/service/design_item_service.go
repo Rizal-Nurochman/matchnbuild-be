@@ -22,6 +22,7 @@ type (
 	DesignItemService interface {
 		Create(ctx context.Context, userID string, req dto.DesignItemCreateRequest) (dto.DesignItemResponse, error)
 		GetAll(ctx context.Context) ([]dto.DesignItemResponse, error)
+		GetAllFeatures(ctx context.Context, category string) ([]dto.FeatureResponse, error)
 		GetByID(ctx context.Context, id string) (dto.DesignItemResponse, error)
 		GetMyItems(ctx context.Context, userID string) ([]dto.DesignItemResponse, error)
 		Update(ctx context.Context, userID string, designItemID string, req dto.DesignItemUpdateRequest) (dto.DesignItemResponse, error)
@@ -102,6 +103,31 @@ func (s *designItemService) GetAll(ctx context.Context) ([]dto.DesignItemRespons
 	var result []dto.DesignItemResponse
 	for _, item := range items {
 		result = append(result, dto.ToDesignItemResponse(item))
+	}
+
+	return result, nil
+}
+
+func (s *designItemService) GetAllFeatures(ctx context.Context, category string) ([]dto.FeatureResponse, error)  {
+	var features []entities.Feature
+	var err error
+
+	if category != "" {
+		features, err = s.designItemRepo.GetByCategory(ctx, nil, category)
+	} else {
+		features, err = s.designItemRepo.GetAllFeatures(ctx, nil)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	var result []dto.FeatureResponse
+	for _, data := range features {
+		result = append(result, dto.FeatureResponse{
+			ID: data.ID.String(),
+			Name: data.Name,
+		})
 	}
 
 	return result, nil

@@ -16,6 +16,9 @@ const (
 	MESSAGE_SUCCESS_GET_DESIGN_ITEM    = "success get design item"
 	MESSAGE_SUCCESS_UPDATE_DESIGN_ITEM = "success update design item"
 	MESSAGE_SUCCESS_DELETE_DESIGN_ITEM = "success delete design item"
+
+	MESSAGE_FAILED_GET_FEATURES = "failed get features"
+	MESSGAE_SUCCESS_GET_FEATURES = "success get features"
 )
 
 var (

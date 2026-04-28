@@ -15,7 +15,9 @@ type (
 	DesignItemRepository interface {
 		Create(ctx context.Context, tx *gorm.DB, designItemReq entities.DesignItem) (entities.DesignItem, error)
 		GetAll(ctx context.Context, tx *gorm.DB) ([]entities.DesignItem, error)
+		GetAllFeatures(ctx context.Context, tx *gorm.DB) ([]entities.Feature, error)
 		GetByID(ctx context.Context, tx *gorm.DB, designItemID string) (entities.DesignItem, error)
+		GetByCategory(ctx context.Context, tx *gorm.DB, category string) ([]entities.Feature, error)
 		GetByDesignerID(ctx context.Context, tx *gorm.DB, designerID string) ([]entities.DesignItem, error)
 		Update(ctx context.Context, tx *gorm.DB, designItemReq entities.DesignItem) (entities.DesignItem, error)
 		Delete(ctx context.Context, tx *gorm.DB, designItemID string) (error)
@@ -51,6 +53,34 @@ func (r *designItemRepository) GetAll(ctx context.Context, tx *gorm.DB) ([]entit
 	}
 
 	return designItems, nil
+}
+
+func (r *designItemRepository) GetAllFeatures(ctx context.Context, tx *gorm.DB) ([]entities.Feature, error)  {
+	if tx == nil {
+		tx = r.db
+	}
+
+	var features []entities.Feature
+	err := tx.WithContext(ctx).Find(&features).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return features, nil
+}
+
+func (r *designItemRepository) GetByCategory(ctx context.Context, tx *gorm.DB, category string) ([]entities.Feature, error)  {
+	if tx == nil {
+		tx = r.db
+	}
+
+	var features []entities.Feature
+	err := tx.WithContext(ctx).Where("category = ?", category).Take(&features).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return features, nil
 }
 
 func (r *designItemRepository) GetByID(ctx context.Context, tx *gorm.DB, designItemID string) (entities.DesignItem, error) {
