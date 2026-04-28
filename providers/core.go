@@ -8,6 +8,9 @@ import (
 	designerRepo "github.com/Rizal-Nurochman/matchnbuild/modules/designer/repository"
 	designerService "github.com/Rizal-Nurochman/matchnbuild/modules/designer/service"
 	designerController "github.com/Rizal-Nurochman/matchnbuild/modules/designer/controller"
+	userPreferenceRepo "github.com/Rizal-Nurochman/matchnbuild/modules/user_preferences/repository"
+	userPreferenceService "github.com/Rizal-Nurochman/matchnbuild/modules/user_preferences/service"
+	userPreferenceHandler "github.com/Rizal-Nurochman/matchnbuild/modules/user_preferences/controller"
 	prController "github.com/Rizal-Nurochman/matchnbuild/modules/project_request/controller"
 	prRepo "github.com/Rizal-Nurochman/matchnbuild/modules/project_request/repository"
 	prService "github.com/Rizal-Nurochman/matchnbuild/modules/project_request/service"
@@ -51,6 +54,7 @@ func RegisterDependencies(injector *do.Injector) {
 	orderRepository := qRepo.NewOrderRepository(db)
 	designerRepository := designerRepo.NewDesignerProfileRepository(db)
 	designItemRepository := desigItemRepo.NewDesignItemRepository(db)
+	userPreferencesRepository := userPreferenceRepo.NewUserPreferenceRepository(db)
 
 	// Services
 	userSvc := userService.NewUserService(userRepository, db)
@@ -59,6 +63,7 @@ func RegisterDependencies(injector *do.Injector) {
 	quotationSvc := qService.NewQuotationService(quotationRepository, orderRepository, projectRequestRepository, designerProfileRepository, db)
 	designerSvc := designerService.NewDesignerProfileService(designerRepository)
 	desigItemSvc := desigItemService.NewDesignItemService(designItemRepository, designerRepository, db)
+	userPrencesSvc := userPreferenceService.NewUserPreferenceService(userPreferencesRepository)
 
 	// Controllers
 	do.Provide(
@@ -94,6 +99,12 @@ func RegisterDependencies(injector *do.Injector) {
 	do.Provide(
 		injector, func(i *do.Injector) (designItemHandler.DesignItemHandler, error) {
 			return designItemHandler.NewDesignItemHandler(i, desigItemSvc), nil
+		},
+	)
+
+	do.Provide(
+		injector, func(i *do.Injector) (userPreferenceHandler.UserPreferenceHandler, error) {
+			return userPreferenceHandler.NewUserPreferenceHandler(i, userPrencesSvc), nil
 		},
 	)
 }
