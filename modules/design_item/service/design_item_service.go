@@ -189,6 +189,12 @@ func (s *designItemService) Update(ctx context.Context, userID string, designIte
 		return dto.DesignItemResponse{}, dto.ErrNotDesignItemOwner
 	}
 
+	tx := s.db.Begin()
+	if tx.Error != nil {
+		return dto.DesignItemResponse{}, tx.Error
+	}
+	defer tx.Rollback()
+
 	if req.Title != nil {
 		item.Title = *req.Title
 	}
@@ -232,40 +238,36 @@ func (s *designItemService) Update(ctx context.Context, userID string, designIte
 		item.ImageURL = req.ImageURL
 	}
 
-	if req.FeatureIDs != nil {
-		tx := s.db.Begin()
+	if err := tx.Updates(&item).Error; err != nil {
+		return dto.DesignItemResponse{}, err
+	}
 
-		if err := tx.Where("design_item_id = ?", item.ID).Delete(&entities.DesignItemFeature{}).Error; err != nil {
-			tx.Rollback()
+	if req.FeatureIDs != nil {
+		if err := tx.Where("design_item_id = ?", item.ID).
+			Delete(&entities.DesignItemFeature{}).Error; err != nil {
 			return dto.DesignItemResponse{}, err
 		}
 
 		for _, fID := range req.FeatureIDs {
 			featureUUID, err := uuid.Parse(fID)
 			if err != nil {
-				tx.Rollback()
 				return dto.DesignItemResponse{}, err
 			}
+
 			if err := tx.Create(&entities.DesignItemFeature{
 				DesignItemID: item.ID,
 				FeatureID:    featureUUID,
 			}).Error; err != nil {
-				tx.Rollback()
 				return dto.DesignItemResponse{}, err
 			}
 		}
-
-		if err := tx.Commit().Error; err != nil {
-			return dto.DesignItemResponse{}, err
-		}
 	}
 
-	updated, err := s.designItemRepo.Update(ctx, nil, item)
-	if err != nil {
+	if err := tx.Commit().Error; err != nil {
 		return dto.DesignItemResponse{}, err
 	}
 
-	result, err := s.designItemRepo.GetByID(ctx, nil, updated.ID.String())
+	result, err := s.designItemRepo.GetByID(ctx, nil, item.ID.String())
 	if err != nil {
 		return dto.DesignItemResponse{}, err
 	}
