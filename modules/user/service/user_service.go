@@ -51,11 +51,11 @@ func (s *userService) Update(ctx context.Context, req dto.UserUpdateRequest, use
 		return dto.UserUpdateResponse{}, dto.ErrUserNotFound
 	}
 
-	if req.Name != "" {
-		user.Name = req.Name
+	if req.Name != nil {
+		user.Name = *req.Name
 	}
-	if req.Email != "" {
-		user.Email = req.Email
+	if req.Email != nil {
+		user.Email = *req.Email
 	}
 	if req.ProfilePicture != nil {
 		user.ProfilePicture = req.ProfilePicture

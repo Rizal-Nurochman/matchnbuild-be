@@ -51,9 +51,9 @@ func (s *designItemService) Create(ctx context.Context, userID string, req dto.D
 
 	switch req.Category {
 	case "architecture":
-		if req.LandAreaMin == nil || req.LandAreaMax == nil || 
+		if req.LandAreaMin == nil || req.LandAreaMax == nil ||
 			req.BuildingArea == nil || req.NumFloors == nil {
-				return dto.DesignItemResponse{}, errors.New("Field arsitektur harus diisi!")
+			return dto.DesignItemResponse{}, errors.New("Field arsitektur harus diisi!")
 		}
 	case "interior":
 		if req.RoomType == nil || req.RoomArea == nil {
@@ -190,46 +190,46 @@ func (s *designItemService) Update(ctx context.Context, userID string, designIte
 	}
 
 	if req.Title != nil {
-    item.Title = *req.Title    
+		item.Title = *req.Title
 	}
 	if req.Description != nil {
-			item.Description = *req.Description  
+		item.Description = *req.Description
 	}
 	if req.Style != nil {
-			item.Style = *req.Style
+		item.Style = *req.Style
 	}
 	if req.Category != nil {
-			item.Category = *req.Category
+		item.Category = *req.Category
 	}
 	if req.LandAreaMin != nil {
-			item.LandAreaMin = req.LandAreaMin   
+		item.LandAreaMin = req.LandAreaMin
 	}
 	if req.LandAreaMax != nil {
-			item.LandAreaMax = req.LandAreaMax
+		item.LandAreaMax = req.LandAreaMax
 	}
 	if req.BuildingArea != nil {
-			item.BuildingArea = req.BuildingArea
+		item.BuildingArea = req.BuildingArea
 	}
 	if req.NumFloors != nil {
-			item.NumFloors = req.NumFloors
+		item.NumFloors = req.NumFloors
 	}
 	if req.NumBedrooms != nil {
-			item.NumBedrooms = req.NumBedrooms
+		item.NumBedrooms = req.NumBedrooms
 	}
 	if req.RoomType != nil {
-			item.RoomType = req.RoomType
+		item.RoomType = req.RoomType
 	}
 	if req.RoomArea != nil {
-			item.RoomArea = req.RoomArea
+		item.RoomArea = req.RoomArea
 	}
 	if req.EstimatedBudget != nil {
-			item.EstimatedBudget = decimal.NewFromFloat(*req.EstimatedBudget)
+		item.EstimatedBudget = decimal.NewFromFloat(*req.EstimatedBudget)
 	}
 	if req.PriceStartFrom != nil {
-			item.PriceStartFrom = decimal.NewFromFloat(*req.PriceStartFrom)
+		item.PriceStartFrom = decimal.NewFromFloat(*req.PriceStartFrom)
 	}
 	if req.ImageURL != "" {
-			item.ImageURL = req.ImageURL
+		item.ImageURL = req.ImageURL
 	}
 
 	if req.FeatureIDs != nil {

@@ -20,11 +20,11 @@ type (
 		GetByCategory(ctx context.Context, tx *gorm.DB, category string) ([]entities.Feature, error)
 		GetByDesignerID(ctx context.Context, tx *gorm.DB, designerID string) ([]entities.DesignItem, error)
 		Update(ctx context.Context, tx *gorm.DB, designItemReq entities.DesignItem) (entities.DesignItem, error)
-		Delete(ctx context.Context, tx *gorm.DB, designItemID string) (error)
+		Delete(ctx context.Context, tx *gorm.DB, designItemID string) error
 	}
 )
 
-func NewDesignItemRepository(db *gorm.DB) DesignItemRepository  {
+func NewDesignItemRepository(db *gorm.DB) DesignItemRepository {
 	return &designItemRepository{db: db}
 }
 
@@ -55,7 +55,7 @@ func (r *designItemRepository) GetAll(ctx context.Context, tx *gorm.DB) ([]entit
 	return designItems, nil
 }
 
-func (r *designItemRepository) GetAllFeatures(ctx context.Context, tx *gorm.DB) ([]entities.Feature, error)  {
+func (r *designItemRepository) GetAllFeatures(ctx context.Context, tx *gorm.DB) ([]entities.Feature, error) {
 	if tx == nil {
 		tx = r.db
 	}
@@ -69,7 +69,7 @@ func (r *designItemRepository) GetAllFeatures(ctx context.Context, tx *gorm.DB) 
 	return features, nil
 }
 
-func (r *designItemRepository) GetByCategory(ctx context.Context, tx *gorm.DB, category string) ([]entities.Feature, error)  {
+func (r *designItemRepository) GetByCategory(ctx context.Context, tx *gorm.DB, category string) ([]entities.Feature, error) {
 	if tx == nil {
 		tx = r.db
 	}
@@ -111,7 +111,7 @@ func (r *designItemRepository) GetByDesignerID(ctx context.Context, tx *gorm.DB,
 	return designItems, nil
 }
 
-func (r *designItemRepository) Update(ctx context.Context, tx *gorm.DB, designItemReq entities.DesignItem) (entities.DesignItem, error)  {
+func (r *designItemRepository) Update(ctx context.Context, tx *gorm.DB, designItemReq entities.DesignItem) (entities.DesignItem, error) {
 	if tx == nil {
 		tx = r.db
 	}
@@ -124,7 +124,7 @@ func (r *designItemRepository) Update(ctx context.Context, tx *gorm.DB, designIt
 	return designItemReq, nil
 }
 
-func (r *designItemRepository) Delete(ctx context.Context, tx *gorm.DB, designItemID string) (error) {
+func (r *designItemRepository) Delete(ctx context.Context, tx *gorm.DB, designItemID string) error {
 	if tx == nil {
 		tx = r.db
 	}

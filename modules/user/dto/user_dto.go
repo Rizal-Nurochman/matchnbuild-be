@@ -64,18 +64,18 @@ type (
 		IsVerified 			 bool   `json:"is_verified"`
 	}
 	UserUpdateRequest struct {
-		Name       string `json:"name" form:"name" binding:"omitempty,min=2,max=100"`
-		Email      string `json:"email" form:"email" binding:"omitempty,email"`
+		Name       				*string `json:"name" form:"name" binding:"omitempty,min=2,max=100"`
+		Email      				*string `json:"email" form:"email" binding:"omitempty,email"`
 		ProfilePicture		*string	`json:"profile_picture" binding:"omitempty"`
 	}
 
 	UserUpdateResponse struct {
-		ID         string `json:"id"`
-		Name       string `json:"name"`
-		Role       string `json:"role"`
-		Email      string `json:"email"`
+		ID         			string `json:"id"`
+		Name       			string `json:"name"`
+		Role       			string `json:"role"`
+		Email      			string `json:"email"`
 		ProfilePicture	*string	`json:"profile_picture"`
-		IsVerified bool   `json:"is_verified"`
+		IsVerified 			bool   `json:"is_verified"`
 	}
 
 	SendVerificationEmailRequest struct {

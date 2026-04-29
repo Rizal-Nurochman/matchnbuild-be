@@ -97,11 +97,11 @@ func (s *designerService) Update(ctx context.Context, userID string, req dto.Des
 		return dto.DesignerProfileResponse{}, dto.ErrDesignerProfileNotFound
 	}
 
-	if req.Bio != "" {
-		profile.Bio = req.Bio
+	if req.Bio != nil {
+		profile.Bio = *req.Bio
 	}
-	if req.Location != "" {
-		profile.Location = req.Location
+	if req.Location != nil {
+		profile.Location = *req.Location
 	}
 	if req.ExperienceYears != nil {
 		profile.ExperienceYears = *req.ExperienceYears
@@ -109,8 +109,8 @@ func (s *designerService) Update(ctx context.Context, userID string, req dto.Des
 	if req.IsAvailable != nil {
 		profile.IsAvailable = *req.IsAvailable
 	}
-	if req.BankAccountNumber != "" {
-		profile.BankAccountNumber = req.BankAccountNumber
+	if req.BankAccountNumber != nil {
+		profile.BankAccountNumber = *req.BankAccountNumber
 	}
 
 	updated, err := s.designerRepo.Update(ctx, nil, profile)

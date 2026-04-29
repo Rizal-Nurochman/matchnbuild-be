@@ -16,11 +16,11 @@ var (
 
 type (
 	DesignerProfileUpdateRequest struct {
-		Bio               string `json:"bio" binding:"omitempty,max=1000"`
+		Bio               *string `json:"bio" binding:"omitempty,max=1000"`
 		ExperienceYears   *int   `json:"experience_years" binding:"omitempty,min=0,max=50"`
 		IsAvailable       *bool  `json:"is_available" binding:"omitempty"`
-		Location          string `json:"location" binding:"omitempty,max=255"`
-		BankAccountNumber string `json:"bank_account_number" binding:"omitempty,max=50"`
+		Location          *string `json:"location" binding:"omitempty,max=255"`
+		BankAccountNumber *string `json:"bank_account_number" binding:"omitempty,max=50"`
     }
 
 	DesignerProfileResponse struct {

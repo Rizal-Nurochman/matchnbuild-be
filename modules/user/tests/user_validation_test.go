@@ -40,10 +40,11 @@ func TestUserValidation_ValidateUserCreateRequest_InvalidName(t *testing.T) {
 
 func TestUserValidation_ValidateUserUpdateRequest_Success(t *testing.T) {
 	userValidation := validation.NewUserValidation()
-
+	name := "Update Name"
+	email := "updated@example.com"
 	req := dto.UserUpdateRequest{
-		Name:       "Updated Name",
-		Email:      "updated@example.com",
+		Name:       &name,
+		Email:      &email,
 	}
 
 	err := userValidation.ValidateUserUpdateRequest(req)
