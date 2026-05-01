@@ -19,6 +19,9 @@ const (
 
 	MESSAGE_FAILED_GET_FEATURES = "failed get features"
 	MESSAGE_SUCCESS_GET_FEATURES = "success get features"
+
+	CategoryArchitecture = "architecture"
+	CategoryInterior = "interior"
 )
 
 var (
@@ -31,7 +34,7 @@ type (
 		Title           string   `json:"title" binding:"required,max=200"`
 		Description     string   `json:"description" binding:"omitempty,max=2000"`
 		Style           string   `json:"style" binding:"required,max=50"`
-		Category 				string			`json:"category" binding:"required,max=50"`
+		Category 				string			`json:"category" binding:"required,oneof=architecture interior"`
 		LandAreaMin     *float64  `json:"land_area_min" binding:"omitempty,gt=0"`
 		LandAreaMax     *float64    `json:"land_area_max" binding:"omitempty,gt=0"`
 		BuildingArea    *float64  `json:"building_area" binding:"omitempty,gt=0"`
@@ -49,7 +52,7 @@ type (
 		Title           *string   `json:"title" binding:"omitempty,min=1,max=200"`
 		Description     *string   `json:"description" binding:"omitempty,max=2000"`
 		Style           *string   `json:"style" binding:"omitempty,min=1,max=50"`
-		Category 				*string			`json:"category" binding:"omitempty,min=1,max=50"`
+		Category 				*string			`json:"category" binding:"omitempty,oneof=architecture interior"`
 		LandAreaMin     *float64  `json:"land_area_min" binding:"omitempty,gt=0"`
 		LandAreaMax     *float64    `json:"land_area_max" binding:"omitempty,gt=0"`
 		BuildingArea    *float64  `json:"building_area" binding:"omitempty,gt=0"`

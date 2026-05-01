@@ -8,6 +8,7 @@ import (
 	"github.com/Rizal-Nurochman/matchnbuild/modules/design_item/dto"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/design_item/repository"
 	designerRepo "github.com/Rizal-Nurochman/matchnbuild/modules/designer/repository"
+	"github.com/Rizal-Nurochman/matchnbuild/pkg/helpers"
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
@@ -48,6 +49,8 @@ func (s *designItemService) Create(ctx context.Context, userID string, req dto.D
 	if err != nil {
 		return dto.DesignItemResponse{}, dto.ErrDesignItemNotFound
 	}
+
+	helpers.SanitizeByCategory(&req)
 
 	switch req.Category {
 	case "architecture":
