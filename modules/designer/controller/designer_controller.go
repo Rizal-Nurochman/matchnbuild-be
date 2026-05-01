@@ -7,17 +7,13 @@ import (
 	"github.com/Rizal-Nurochman/matchnbuild/modules/designer/dto"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/designer/query"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/designer/service"
-	"github.com/Rizal-Nurochman/matchnbuild/pkg/constants"
 	"github.com/Rizal-Nurochman/matchnbuild/pkg/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/samber/do"
-	"gorm.io/gorm"
 )
 
 type (
 	designerProfileHandler struct {
 		designerService service.DesignerService
-		db *gorm.DB
 	}
 
 	DesignerProfileHandler interface {
@@ -28,9 +24,8 @@ type (
 	}
 )
 
-func NewDesignerProfileHandler(injector *do.Injector, designerService service.DesignerService) DesignerProfileHandler  {
-	db := do.MustInvokeNamed[*gorm.DB](injector, constants.DB)
-	return &designerProfileHandler{designerService: designerService, db: db}
+func NewDesignerProfileHandler(designerService service.DesignerService) DesignerProfileHandler  {
+	return &designerProfileHandler{designerService: designerService}
 }
 
 func (h *designerProfileHandler) GetAll(ctx *gin.Context)  {
@@ -39,15 +34,15 @@ func (h *designerProfileHandler) GetAll(ctx *gin.Context)  {
 
 	ctx.ShouldBindQuery(filter)
 
-	designers, total, err := pagination.PaginatedQueryWithIncludable[query.Designer](h.db, filter)
+	designers, total, err := h.designerService.GetAll(ctx.Request.Context(), filter)
 	if err != nil {
-		res:=utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DESIGNER_PROFILE, err.Error(), nil)
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DESIGNER_PROFILE, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
 
-	paginationRes := pagination.CalculatePagination(filter.Pagination, total)
-	res := pagination.NewPaginatedResponse(http.StatusOK, dto.MESSAGE_SUCCESS_GET_DESIGNER_PROFILE, designers, paginationRes)
+	paginationResponse := pagination.CalculatePagination(filter.Pagination, total)
+	res := pagination.NewPaginatedResponse(http.StatusOK, dto.MESSAGE_SUCCESS_GET_DESIGNER_PROFILE, designers, paginationResponse)
 	ctx.JSON(http.StatusOK, res)
 }
 

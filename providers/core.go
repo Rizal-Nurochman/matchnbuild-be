@@ -61,7 +61,7 @@ func RegisterDependencies(injector *do.Injector) {
 	authSvc := authService.NewAuthService(userRepository, refreshTokenRepository, jwtService, db)
 	projectRequestSvc := prService.NewProjectRequestService(projectRequestRepository, conversationRepository, designerProfileRepository, db)
 	quotationSvc := qService.NewQuotationService(quotationRepository, orderRepository, projectRequestRepository, designerProfileRepository, db)
-	designerSvc := designerService.NewDesignerProfileService(designerRepository)
+	designerSvc := designerService.NewDesignerProfileService(designerRepository, db)
 	desigItemSvc := desigItemService.NewDesignItemService(designItemRepository, designerRepository, db)
 	userPrencesSvc := userPreferenceService.NewUserPreferenceService(userPreferencesRepository)
 
@@ -92,7 +92,7 @@ func RegisterDependencies(injector *do.Injector) {
 
 	do.Provide(
 		injector, func(i *do.Injector) (designerController.DesignerProfileHandler, error) {
-			return designerController.NewDesignerProfileHandler(i, designerSvc), nil
+			return designerController.NewDesignerProfileHandler(designerSvc), nil
 		},
 	)
 

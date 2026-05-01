@@ -15,8 +15,8 @@ func RegisterRoutes(server *gin.RouterGroup, injector *do.Injector) {
 	DesignerRouter := server.Group("/designers")
 	{
 		DesignerRouter.GET("", designerHandler.GetAll)
-		DesignerRouter.GET("/:id", designerHandler.GetByID)
 		DesignerRouter.GET("/me", middlewares.Authenticate(JwtSvc), designerHandler.GetMyProfile)
+		DesignerRouter.GET("/:id", designerHandler.GetByID)
 		DesignerRouter.PATCH("/:id", middlewares.Authenticate(JwtSvc), designerHandler.Update)
 	}
 }

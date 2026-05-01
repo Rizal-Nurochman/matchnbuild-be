@@ -3,50 +3,33 @@ package service
 import (
 	"context"
 
+	"github.com/Caknoooo/go-pagination"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/designer/dto"
+	"github.com/Rizal-Nurochman/matchnbuild/modules/designer/query"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/designer/repository"
+	"gorm.io/gorm"
 )
 
 type (
 	designerService struct {
 		designerRepo repository.DesignerRepository
+		db 					 *gorm.DB
 	}
 
 	DesignerService interface {
-		GetAll(ctx context.Context) ([]dto.DesignerProfileResponse, error)
+		GetAll(ctx context.Context, filter *query.DesignerFilter) ([]query.Designer, int64, error)
 		GetByID(ctx context.Context, id string) (dto.DesignerProfileResponse, error)
 		GetMyProfile(ctx context.Context, userID string) (dto.DesignerProfileResponse, error)
 		Update(ctx context.Context, userID string, req dto.DesignerProfileUpdateRequest) (dto.DesignerProfileResponse, error)
 	}
 )
 
-func NewDesignerProfileService(designerRepo repository.DesignerRepository) DesignerService {
-	return &designerService{designerRepo: designerRepo}
+func NewDesignerProfileService(designerRepo repository.DesignerRepository, db *gorm.DB) DesignerService {
+	return &designerService{designerRepo: designerRepo, db: db}
 }
 
-func (s *designerService) GetAll(ctx context.Context) ([]dto.DesignerProfileResponse, error) {
-	designers, err := s.designerRepo.GetAll(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var result []dto.DesignerProfileResponse
-	for _, data := range designers {
-		result = append(result, 
-		dto.DesignerProfileResponse{
-			ID: data.ID.String(),
-			UserID: data.UserID.String(),
-			Name: data.User.Name,
-			ProfilePicture: data.User.ProfilePicture,
-			Bio: data.Bio,
-			ExperienceYears: data.ExperienceYears,
-			IsVerified: data.IsVerified,
-			IsAvailable: data.IsAvailable,
-			Location: data.Location,
-		})
-	}
-
-	return result, nil
+func (s *designerService) GetAll(ctx context.Context, filter *query.DesignerFilter) ([]query.Designer, int64, error) {
+	return pagination.PaginatedQueryWithIncludable[query.Designer](s.db, filter)
 }
 
 func (s *designerService) GetByID(ctx context.Context, id string) (dto.DesignerProfileResponse, error) {
