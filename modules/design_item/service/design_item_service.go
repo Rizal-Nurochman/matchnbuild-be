@@ -8,6 +8,7 @@ import (
 	"github.com/Rizal-Nurochman/matchnbuild/modules/design_item/dto"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/design_item/repository"
 	designerRepo "github.com/Rizal-Nurochman/matchnbuild/modules/designer/repository"
+	prefRepo "github.com/Rizal-Nurochman/matchnbuild/modules/user_preferences/repository"
 	"github.com/Rizal-Nurochman/matchnbuild/pkg/helpers"
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
@@ -16,9 +17,10 @@ import (
 
 type (
 	designItemService struct {
-		designItemRepo repository.DesignItemRepository
-		designerRepo   designerRepo.DesignerRepository
-		db             *gorm.DB
+		designItemRepo  repository.DesignItemRepository
+		designerRepo    designerRepo.DesignerRepository
+		userPrefRepo    prefRepo.UserPreferenceRepository
+		db              *gorm.DB
 	}
 
 	DesignItemService interface {
@@ -27,6 +29,7 @@ type (
 		GetAllFeatures(ctx context.Context, category string) ([]dto.FeatureResponse, error)
 		GetByID(ctx context.Context, id string) (dto.DesignItemResponse, error)
 		GetMyItems(ctx context.Context, userID string) ([]dto.DesignItemResponse, error)
+		GetRecommendations(ctx context.Context, userID string) (dto.RecommendationResponse, error)
 		Update(ctx context.Context, userID string, designItemID string, req dto.DesignItemUpdateRequest) (dto.DesignItemResponse, error)
 		Delete(ctx context.Context, userID string, designItemID string) error
 	}
@@ -35,11 +38,13 @@ type (
 func NewDesignItemService(
 	designItemRepo repository.DesignItemRepository,
 	designerRepo designerRepo.DesignerRepository,
+	userPrefRepo prefRepo.UserPreferenceRepository,
 	db *gorm.DB,
 ) DesignItemService {
 	return &designItemService{
 		designItemRepo: designItemRepo,
 		designerRepo:   designerRepo,
+		userPrefRepo:   userPrefRepo,
 		db:             db,
 	}
 }
@@ -94,6 +99,7 @@ func (s *designItemService) Create(ctx context.Context, userID string, req dto.D
 		EstimatedBudget: decimal.NewFromFloat(req.EstimatedBudget),
 		PriceStartFrom:  decimal.NewFromFloat(req.PriceStartFrom),
 		ImageURL:        req.ImageURL,
+		Location:        req.Location,
 		Features:        features,
 	}
 
@@ -240,6 +246,9 @@ func (s *designItemService) Update(ctx context.Context, userID string, designIte
 	if req.ImageURL != "" {
 		item.ImageURL = req.ImageURL
 	}
+	if req.Location != nil {
+		item.Location = *req.Location
+	}
 
 	if err := tx.Updates(&item).Error; err != nil {
 		return dto.DesignItemResponse{}, err
@@ -294,4 +303,55 @@ func (s *designItemService) Delete(ctx context.Context, userID string, designIte
 	}
 
 	return s.designItemRepo.Delete(ctx, nil, designItemID)
+}
+
+func (s *designItemService) GetRecommendations(ctx context.Context, userID string) (dto.RecommendationResponse, error) {
+	pref, err := s.userPrefRepo.GetByUserID(ctx, nil, userID)
+	if err != nil {
+		return dto.RecommendationResponse{}, errors.New("please complete your preferences first")
+	}
+
+	const limit = 20
+
+	items, err := s.designItemRepo.GetRecommended(
+		ctx, nil,
+		pref.PreferredStyle,
+		pref.BudgetMin,
+		pref.BudgetMax,
+		pref.PreferredLocation,
+		limit,
+	)
+	if err != nil {
+		return dto.RecommendationResponse{}, err
+	}
+
+	var responses []dto.DesignItemResponse
+	for _, item := range items {
+		responses = append(responses, dto.ToDesignItemResponse(item))
+	}
+
+	// Determine match type based on results
+	matchType := "popular"
+	if len(items) > 0 {
+		// Check if the top result actually matches any preference
+		top := items[0]
+		hasStyleMatch := top.Style == pref.PreferredStyle
+		hasBudgetMatch := top.EstimatedBudget.GreaterThanOrEqual(pref.BudgetMin) && top.EstimatedBudget.LessThanOrEqual(pref.BudgetMax)
+		hasLocationMatch := top.Location == pref.PreferredLocation
+
+		if hasStyleMatch && hasBudgetMatch && hasLocationMatch {
+			matchType = "exact"
+		} else if hasStyleMatch || hasBudgetMatch || hasLocationMatch {
+			matchType = "partial"
+		}
+	}
+
+	if responses == nil {
+		responses = []dto.DesignItemResponse{}
+	}
+
+	return dto.RecommendationResponse{
+		Items:     responses,
+		MatchType: matchType,
+	}, nil
 }

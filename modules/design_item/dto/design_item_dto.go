@@ -17,17 +17,25 @@ const (
 	MESSAGE_SUCCESS_UPDATE_DESIGN_ITEM = "success update design item"
 	MESSAGE_SUCCESS_DELETE_DESIGN_ITEM = "success delete design item"
 
-	MESSAGE_FAILED_GET_FEATURES = "failed get features"
+	MESSAGE_FAILED_GET_FEATURES  = "failed get features"
 	MESSAGE_SUCCESS_GET_FEATURES = "success get features"
 
+	MESSAGE_FAILED_GET_RECOMMENDATIONS  = "failed get recommendations"
+	MESSAGE_SUCCESS_GET_RECOMMENDATIONS = "success get recommendations"
+
 	CategoryArchitecture = "architecture"
-	CategoryInterior = "interior"
+	CategoryInterior     = "interior"
 )
 
 var (
 	ErrDesignItemNotFound = errors.New("design item not found")
 	ErrNotDesignItemOwner = errors.New("you are not the owner of this design item")
 )
+
+type RecommendationResponse struct {
+	Items     []DesignItemResponse `json:"items"`
+	MatchType string               `json:"match_type"`
+}
 
 type (
 	DesignItemCreateRequest struct {
@@ -45,6 +53,7 @@ type (
 		EstimatedBudget float64  `json:"estimated_budget" binding:"required,gt=0"`
 		PriceStartFrom  float64  `json:"price_start_from" binding:"required,gt=0"`
 		ImageURL        string   `json:"image_url" binding:"omitempty,url"`
+		Location        string   `json:"location" binding:"omitempty,max=100"`
 		FeatureIDs      []string `json:"feature_ids" binding:"omitempty"`
 	}
 
@@ -63,6 +72,7 @@ type (
 		EstimatedBudget *float64  `json:"estimated_budget" binding:"omitempty,gt=0"`
 		PriceStartFrom  *float64  `json:"price_start_from" binding:"omitempty,gt=0"`
 		ImageURL        string   `json:"image_url" binding:"omitempty,url"`
+		Location        *string  `json:"location" binding:"omitempty,max=100"`
 		FeatureIDs      []string `json:"feature_ids" binding:"omitempty"`
 	}
 
@@ -89,6 +99,7 @@ type (
 		EstimatedBudget string            `json:"estimated_budget"`
 		PriceStartFrom  string            `json:"price_start_from"`
 		ImageURL        string            `json:"image_url"`
+		Location        string            `json:"location"`
 		Features        []FeatureResponse `json:"features"`
 	}
 )
@@ -120,6 +131,7 @@ func ToDesignItemResponse(item entities.DesignItem) DesignItemResponse {
 		EstimatedBudget: item.EstimatedBudget.String(),
 		PriceStartFrom:  item.PriceStartFrom.String(),
 		ImageURL:        item.ImageURL,
+		Location:        item.Location,
 		Features:        features,
 	}
 }

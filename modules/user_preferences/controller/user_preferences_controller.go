@@ -12,10 +12,10 @@ import (
 	"gorm.io/gorm"
 )
 
-type(
+type (
 	userPreferenceHandler struct {
 		userPreferenceService service.UserPreferenceService
-		db 										*gorm.DB
+		db                    *gorm.DB
 	}
 
 	UserPreferenceHandler interface {
@@ -57,15 +57,15 @@ func (h *userPreferenceHandler) GetByID(ctx *gin.Context) {
 	preference, err := h.userPreferenceService.GetByUserID(ctx.Request.Context(), userID)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_PREFERENCE, err.Error(), nil)
-    ctx.JSON(http.StatusBadRequest, res)
-    return
-  }
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
 
-  res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_PREFERENCE, preference)
-  ctx.JSON(http.StatusOK, res)
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_PREFERENCE, preference)
+	ctx.JSON(http.StatusOK, res)
 }
 
-func (h *userPreferenceHandler) Update(ctx *gin.Context)  {
+func (h *userPreferenceHandler) Update(ctx *gin.Context) {
 	var req dto.UpdatePreferenceRequest
 	userID := ctx.MustGet("user_id").(string)
 	err := ctx.ShouldBindJSON(&req)

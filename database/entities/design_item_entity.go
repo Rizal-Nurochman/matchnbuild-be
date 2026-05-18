@@ -22,6 +22,7 @@ type DesignItem struct {
 	EstimatedBudget decimal.Decimal `gorm:"type:decimal(15,2);not null"`
 	PriceStartFrom decimal.Decimal `gorm:"type:decimal(15,2);not null;default:0"`
 	ImageURL       string          `gorm:"type:varchar(255)"`
+	Location       string          `gorm:"type:varchar(100)"`
 
 	Designer    DesignerProfile `gorm:"foreignKey:DesignerID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Features 		[]DesignItemFeature

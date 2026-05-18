@@ -62,7 +62,7 @@ func RegisterDependencies(injector *do.Injector) {
 	projectRequestSvc := prService.NewProjectRequestService(projectRequestRepository, conversationRepository, designerProfileRepository, db)
 	quotationSvc := qService.NewQuotationService(quotationRepository, orderRepository, projectRequestRepository, designerProfileRepository, db)
 	designerSvc := designerService.NewDesignerProfileService(designerRepository, db)
-	desigItemSvc := desigItemService.NewDesignItemService(designItemRepository, designerRepository, db)
+	desigItemSvc := desigItemService.NewDesignItemService(designItemRepository, designerRepository, userPreferencesRepository, db)
 	userPrencesSvc := userPreferenceService.NewUserPreferenceService(userPreferencesRepository)
 
 	// Controllers

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Rizal-Nurochman/matchnbuild/database/entities"
+	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 )
 
@@ -19,6 +20,7 @@ type (
 		GetByID(ctx context.Context, tx *gorm.DB, designItemID string) (entities.DesignItem, error)
 		GetByCategory(ctx context.Context, tx *gorm.DB, category string) ([]entities.Feature, error)
 		GetByDesignerID(ctx context.Context, tx *gorm.DB, designerID string) ([]entities.DesignItem, error)
+		GetRecommended(ctx context.Context, tx *gorm.DB, style string, budgetMin decimal.Decimal, budgetMax decimal.Decimal, location string, limit int) ([]entities.DesignItem, error)
 		Update(ctx context.Context, tx *gorm.DB, designItemReq entities.DesignItem) (entities.DesignItem, error)
 		Delete(ctx context.Context, tx *gorm.DB, designItemID string) error
 	}
@@ -136,4 +138,64 @@ func (r *designItemRepository) Delete(ctx context.Context, tx *gorm.DB, designIt
 	}
 
 	return nil
+}
+
+func (r *designItemRepository) GetRecommended(ctx context.Context, tx *gorm.DB, style string, budgetMin decimal.Decimal, budgetMax decimal.Decimal, location string, limit int) ([]entities.DesignItem, error) {
+	if tx == nil {
+		tx = r.db
+	}
+
+	var ids []string
+	err := tx.WithContext(ctx).
+		Raw(`SELECT id FROM design_items
+			WHERE style = ? OR estimated_budget BETWEEN ? AND ? OR location = ?
+			ORDER BY
+				(CASE WHEN style = ? THEN 2 ELSE 0 END) +
+				(CASE WHEN estimated_budget BETWEEN ? AND ? THEN 1 ELSE 0 END) +
+				(CASE WHEN location = ? THEN 1 ELSE 0 END) DESC,
+				created_at DESC
+			LIMIT ?`,
+			style, budgetMin, budgetMax, location,
+			style, budgetMin, budgetMax, location,
+			limit,
+		).
+		Scan(&ids).Error
+	if err != nil {
+		return nil, err
+	}
+
+	if len(ids) == 0 {
+		err = tx.WithContext(ctx).
+			Raw(`SELECT id FROM design_items ORDER BY created_at DESC LIMIT ?`, limit).
+			Scan(&ids).Error
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if len(ids) == 0 {
+		return []entities.DesignItem{}, nil
+	}
+
+	var items []entities.DesignItem
+	err = tx.WithContext(ctx).
+		Preload("Designer").Preload("Designer.User").Preload("Features.Feature").
+		Where("id IN ?", ids).
+		Find(&items).Error
+	if err != nil {
+		return nil, err
+	}
+
+	orderMap := make(map[string]int, len(ids))
+	for i, id := range ids {
+		orderMap[id] = i
+	}
+
+	ordered := make([]entities.DesignItem, len(items))
+	for _, item := range items {
+		idx := orderMap[item.ID.String()]
+		ordered[idx] = item
+	}
+
+	return ordered, nil
 }

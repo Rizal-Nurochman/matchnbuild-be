@@ -10,7 +10,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type(
+type (
 	userPreferenceService struct {
 		userPreferenceRepository repository.UserPreferenceRepository
 	}
@@ -42,13 +42,13 @@ func (s *userPreferenceService) Create(ctx context.Context, userID string, req d
 	}
 
 	prefenceItem := entities.UserPreference{
-		ID: uuid.New(),
-		UserID: uuid.MustParse(userID),
-		PreferredStyle: req.PreferredStyle,
-		BudgetMin: decimal.NewFromFloat(req.BudgetMin),
-		BudgetMax: decimal.NewFromFloat(req.BudgetMax),
+		ID:                uuid.New(),
+		UserID:            uuid.MustParse(userID),
+		PreferredStyle:    req.PreferredStyle,
+		BudgetMin:         decimal.NewFromFloat(req.BudgetMin),
+		BudgetMax:         decimal.NewFromFloat(req.BudgetMax),
 		PreferredLocation: req.PreferredLocation,
-		IsOnboarded: true,
+		IsOnboarded:       true,
 	}
 
 	created, err := s.userPreferenceRepository.Create(ctx, nil, prefenceItem)
@@ -80,6 +80,6 @@ func (s *userPreferenceService) Update(ctx context.Context, userID string, req d
 	if err != nil {
 		return dto.PreferenceResponse{}, err
 	}
-	
+
 	return dto.ToUserPreferenceResponse(updated), nil
 }

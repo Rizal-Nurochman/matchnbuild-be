@@ -14,5 +14,13 @@ func Seeder(db *gorm.DB) error {
 		return err
 	}
 
+	if err := seeds.ListDesignerProfileSeeder(db); err != nil {
+		return err
+	}
+
+	if err := seeds.ListDesignItemSeeder(db); err != nil {
+		return err
+	}
+
 	return nil
 }

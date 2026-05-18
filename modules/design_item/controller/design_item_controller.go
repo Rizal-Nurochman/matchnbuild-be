@@ -24,6 +24,7 @@ type (
 		GetAllFeatures(ctx *gin.Context)
 		GetByID(ctx *gin.Context)
 		GetMyItems(ctx *gin.Context)
+		GetRecommendations(ctx *gin.Context)
 		Update(ctx *gin.Context)
 		Delete(ctx *gin.Context)
 	}
@@ -141,5 +142,19 @@ func (h *designItemHandler) Delete(ctx *gin.Context) {
 	}
 
 	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_DELETE_DESIGN_ITEM, nil)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (h *designItemHandler) GetRecommendations(ctx *gin.Context) {
+	userID := ctx.MustGet("user_id").(string)
+
+	result, err := h.designItemService.GetRecommendations(ctx.Request.Context(), userID)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_RECOMMENDATIONS, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_RECOMMENDATIONS, result)
 	ctx.JSON(http.StatusOK, res)
 }
