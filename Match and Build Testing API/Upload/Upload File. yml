@@ -1,0 +1,12 @@
+info:
+  name: Create User Preferences
+  type: http
+  seq: 2
+http:
+  method: POST
+  url: "{{base_ul}}/user- preferences"
+  headers:    - name: Authorization
+      value: "Bearer {{access_ token}}"  body:    type: json
+    data: |-      {        "preferred_ style": "modern",        "budget_ min": 500000000,        "budget_ max": 200000000,        "preferred_location": "Jakarta"      }  auth: inherit
+settings:  encodeUrl: true  timeout: 0  followRedirects: true
+  maxRedirects: 5

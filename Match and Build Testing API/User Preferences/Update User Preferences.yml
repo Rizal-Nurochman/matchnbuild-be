@@ -1,0 +1,31 @@
+info:
+  name: Update User Preferences
+  type: http
+  seq: 3
+
+http:
+  method: PATCH
+  url: "{{base_url}}/user-preferences/me"
+  headers:
+    - name: Authorization
+      value: Bearer {{access_token}}
+  body:
+    type: json
+    data: |-
+      {
+        "preferred_location": "Surabaya"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: base_url
+      value: http://localhost:8888/api/v1
+    - name: access_token
+      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMjI5NzcxYmQtNDllZS00NmU0LWE5ZTItMzMwYTcwYjBkNzgyIiwicm9sZSI6ImNsaWVudCIsImlzcyI6IlRlbXBsYXRlIiwiZXhwIjoxNzc5MDc0NjU1LCJpYXQiOjE3NzkwNzM3NTV9.LlwCrqmNWyEvFA0DDw5mBkVSBLKlSYeHq8wFDlbbzHg
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,0 +1,23 @@
+info:
+  name: Delete User
+  type: http
+  seq: 4
+
+http:
+  method: DELETE
+  url: "{{base_url}}/user/{{user_id}}"
+  headers:
+    - name: Authorization
+      value: Bearer {{access_token}}
+  auth: inherit
+
+runtime:
+  variables:
+    - name: base_url
+      value: http://localhost:8888/api/v1
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

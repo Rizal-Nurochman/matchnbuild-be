@@ -1,0 +1,37 @@
+info:
+  name: Update Designer Profile
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: "{{base_url}}/designers/{{designer_id}}"
+  headers:
+    - name: Authorization
+      value: Bearer {{access_token}}
+  body:
+    type: json
+    data: |-
+      {
+        "bio": "Experienced architect with 10+ years in residential design",
+        "experience_years": 10,
+        "is_available": true,
+        "location": "Jakarta, Indonesia",
+        "bank_account_number": "1234567890"
+      }
+  auth: inherit
+
+runtime:
+  variables:
+    - name: base_url
+      value: http://localhost:8888/api/v1
+    - name: designer_id
+      value: a090063a-b963-48d2-b10d-b2423c9ef827
+    - name: access_token
+      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYTdiN2VkNmItMzIwMC00Nzg3LThhNjUtNzFmZWQ0NmM0NTY2Iiwicm9sZSI6ImRlc2lnbmVyIiwiaXNzIjoiVGVtcGxhdGUiLCJleHAiOjE3Nzc3MTM5NjIsImlhdCI6MTc3NzcxMzA2Mn0.9YUDXRAWTksO9uQ6uufsfKsg1eg0ZiNh60hslkAv78I
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

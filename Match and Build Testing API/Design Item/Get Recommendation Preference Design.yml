@@ -1,0 +1,25 @@
+info:
+  name: Get Recommendation Preference Design
+  type: http
+  seq: 7
+
+http:
+  method: GET
+  url: "{{base_url}}/design-items/recommendations"
+  headers:
+    - name: Authorization
+      value: Bearer {{access_token}}
+  auth: inherit
+
+runtime:
+  variables:
+    - name: base_url
+      value: http://localhost:8888/api/v1
+    - name: access_token
+      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMjI5NzcxYmQtNDllZS00NmU0LWE5ZTItMzMwYTcwYjBkNzgyIiwicm9sZSI6ImNsaWVudCIsImlzcyI6IlRlbXBsYXRlIiwiZXhwIjoxNzc5MDc0NjU1LCJpYXQiOjE3NzkwNzM3NTV9.LlwCrqmNWyEvFA0DDw5mBkVSBLKlSYeHq8wFDlbbzHg
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

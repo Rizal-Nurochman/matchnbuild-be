@@ -1,0 +1,24 @@
+name: Dev
+variables:
+  - name: base_url
+    value: http://localhost:8888/api/v1
+  - name: access_token
+    value: ""
+  - name: refresh_token
+    value: ""
+  - name: user_id
+    value: ""
+  - name: email
+    value: ""
+  - name: password
+    value: ""
+  - name: design_item_id
+    value: ""
+  - name: designer_id
+    value: ""
+  - name: project_request_id
+    value: ""
+  - name: quotation_id
+    value: ""
+  - name: preference_id
+    value: ""

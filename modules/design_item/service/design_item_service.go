@@ -330,10 +330,8 @@ func (s *designItemService) GetRecommendations(ctx context.Context, userID strin
 		responses = append(responses, dto.ToDesignItemResponse(item))
 	}
 
-	// Determine match type based on results
 	matchType := "popular"
 	if len(items) > 0 {
-		// Check if the top result actually matches any preference
 		top := items[0]
 		hasStyleMatch := top.Style == pref.PreferredStyle
 		hasBudgetMatch := top.EstimatedBudget.GreaterThanOrEqual(pref.BudgetMin) && top.EstimatedBudget.LessThanOrEqual(pref.BudgetMax)

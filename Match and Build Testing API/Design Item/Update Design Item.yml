@@ -1,0 +1,21 @@
+info:
+  name: Update Design Item
+  type: http
+  seq: 5
+http:  method: PATCH
+  url: "{{base_url}}/design-items/{{design_item_id}}"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+  body:
+    type: json
+    data: |-
+      {
+        "title": "Updated Design Item Title"
+      }
+  auth: inherit
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

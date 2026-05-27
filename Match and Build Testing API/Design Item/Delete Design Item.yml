@@ -1,0 +1,16 @@
+info:
+  name: Delete Design Item
+  type: http
+  seq: 6
+http:
+  method: DELETE
+  url: "{{base_url}}/design-items/{{design_item_id}}"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+  auth: inherit
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

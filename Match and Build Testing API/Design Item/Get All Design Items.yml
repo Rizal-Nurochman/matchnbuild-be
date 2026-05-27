@@ -1,0 +1,11 @@
+info:
+  name: Get All Design Items
+  type: http
+  seq: 1
+http:  method: GET
+  url: "{{base_url}}/design-items"
+  auth: inherit
+settings:  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,0 +1,36 @@
+info:
+  name: Create Project Request
+  type: http
+  seq: 1
+http:
+  method: POST
+  url: "{{base_url}}/project-request"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+  body:
+    type: json
+    data: |-
+      {
+        "designer_id": "{{designer_id}}",
+        "description": "I want to build a modern minimalist house",
+        "initial_budget": 5000000000,
+        "area_size": 200,
+        "location_photo_url": "https://example.com/location.jpg",
+        "layout_sketch_url": "https://example.com/sketch.jpg"
+      }
+  auth: inherit
+script:
+  post-response:
+    - script: |-
+        if (res.status === 201) {
+          const body = res.body;
+          if (body.data && body.data.id) {
+            bru.setEnvVar("project_request_id", body.data.id);
+          }
+        }
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

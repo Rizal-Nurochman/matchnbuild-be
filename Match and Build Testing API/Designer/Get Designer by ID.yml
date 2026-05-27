@@ -1,0 +1,22 @@
+info:
+  name: Get Designer by ID
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{base_url}}/designers/{{designer_id}}"
+  auth: inherit
+
+runtime:
+  variables:
+    - name: base_url
+      value: http://localhost:8888/api/v1
+    - name: designer_id
+      value: a090063a-b963-48d2-b10d-b2423c9ef827
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

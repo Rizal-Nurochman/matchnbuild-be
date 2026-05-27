@@ -1,0 +1,32 @@
+info:
+  name: Create Design Item
+  type: http
+  seq: 4
+http:
+  method: POST
+  url: "{{base_url}}/design-items"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+  body:
+    type: json
+    data: |-      {        "title": "Modern Minimalist House",        "description": "A beautiful modern minimalist house design with clean lines",
+        "style": "minimalist",        "category": "residential",        "land_area_min": 100,        "land_area_max": 200,
+        "building_area": 150,
+        "num_floors": 2,        "num_bedrooms": 3,        "room_type": "bedroom",        "room_area": 20,
+        "estimated_budget": 500000000,        "price_start_from": 250000000,
+        "image_url": "https://example.com/image.jpg",        "feature_ids": []
+      }
+  auth: inherit
+script:
+  post-response:    - script: |-
+        if (res.status === 201) {
+          const body = res.body;
+          if (body.data && body.data.id) {
+            bru.setEnvVar("design_item_id", body.data.id);
+          }
+        }
+settings:  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
