@@ -23,6 +23,8 @@ import (
 	userPreferenceHandler "github.com/Rizal-Nurochman/matchnbuild/modules/user_preferences/controller"
 	userPreferenceRepo "github.com/Rizal-Nurochman/matchnbuild/modules/user_preferences/repository"
 	userPreferenceService "github.com/Rizal-Nurochman/matchnbuild/modules/user_preferences/service"
+	recController "github.com/Rizal-Nurochman/matchnbuild/modules/recommendation/controller"
+	recService "github.com/Rizal-Nurochman/matchnbuild/modules/recommendation/service"
 	"github.com/Rizal-Nurochman/matchnbuild/pkg/constants"
 	"github.com/samber/do"
 	"gorm.io/gorm"
@@ -64,6 +66,7 @@ func RegisterDependencies(injector *do.Injector) {
 	designerSvc := designerService.NewDesignerProfileService(designerRepository, db)
 	desigItemSvc := desigItemService.NewDesignItemService(designItemRepository, designerRepository, userPreferencesRepository, db)
 	userPrencesSvc := userPreferenceService.NewUserPreferenceService(userPreferencesRepository)
+	recommendationSvc := recService.NewRecommendationService(designItemRepository)
 
 	// Controllers
 	do.Provide(
@@ -107,4 +110,10 @@ func RegisterDependencies(injector *do.Injector) {
 			return userPreferenceHandler.NewUserPreferenceHandler(i, userPrencesSvc), nil
 		},
 	)
+
+	do.Provide(
+		injector, func(i *do.Injector) (recController.RecommendationHandler, error) {
+			return recController.NewRecommendationHandler(recommendationSvc), nil
+		},
+	)	
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/Rizal-Nurochman/matchnbuild/modules/designer"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/project_request"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/quotation"
+	"github.com/Rizal-Nurochman/matchnbuild/modules/recommendation"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/upload"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/user"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/user_preferences"
@@ -78,6 +79,7 @@ func main() {
 		designer.RegisterRoutes(v1, injector)
 		design_item.RegisterRoutes(v1, injector)
 		user_preferences.RegisterRoutes(v1, injector)
+		recommendation.RegisterRoutes(v1, injector)
 	}
 
 	run(server)
