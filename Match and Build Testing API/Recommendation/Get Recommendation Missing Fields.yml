@@ -1,0 +1,29 @@
+info:
+  name: Get Recommendation Missing Fields
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{base_url}}/recommendations"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "category": "architecture",
+        "style": "minimalist",
+        "location": "Jakarta",
+        "estimated_budget": 500000000
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

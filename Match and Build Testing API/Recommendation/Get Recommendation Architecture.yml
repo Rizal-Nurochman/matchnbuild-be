@@ -1,0 +1,35 @@
+info:
+  name: Get Recommendation Architecture
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{base_url}}/recommendations"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "category": "architecture",
+        "style": "minimalist",
+        "location": "Jakarta",
+        "estimated_budget": 500000000,
+        "land_area_min": 100,
+        "land_area_max": 200,
+        "building_area": 150,
+        "num_floors": 2,
+        "num_bedrooms": 3,
+        "limit": 10
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

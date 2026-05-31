@@ -1,0 +1,32 @@
+info:
+  name: Get Recommendation Interior
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{base_url}}/recommendations"
+  headers:
+    - name: Authorization
+      value: "Bearer {{access_token}}"
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "category": "interior",
+        "style": "scandinavian",
+        "location": "Bandung",
+        "estimated_budget": 50000000,
+        "room_type": "bedroom",
+        "room_area": 20,
+        "limit": 10
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
