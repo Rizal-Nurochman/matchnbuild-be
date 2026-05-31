@@ -1,4 +1,6 @@
-meta:
+info:
   name: Recommendation
   type: folder
-  seq: 9
+  seq: 1
+
+request: {}
