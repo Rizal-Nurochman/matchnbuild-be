@@ -43,7 +43,7 @@ func (s *recommendationService) GetRecommendations(ctx context.Context, req recD
 	if err != nil {
 		return nil, fmt.Errorf("ml service error: %w", err)
 	}
-	var results []recDto.RecommendationResponse
+	results := make([]recDto.RecommendationResponse, 0, len(mlResults))
 	for _, ml := range mlResults {
 		item, err := s.designItemRepo.GetByID(ctx, nil, ml.ItemID)
 		if err != nil {
@@ -54,10 +54,6 @@ func (s *recommendationService) GetRecommendations(ctx context.Context, req recD
 			Score: ml.Score,
 			Item:  dto.ToDesignItemResponse(item),
 		})
-	}
-
-	if results == nil {
-		results = []recDto.RecommendationResponse{}
 	}
 
 	return results, nil
@@ -107,6 +103,9 @@ func (s *recommendationService) callMLService(ctx context.Context, req recDto.Re
 	var results []recDto.MLRecommendationResponse
 	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil {
 		return nil, err
+	}
+	if results == nil {
+		results = []recDto.MLRecommendationResponse{}
 	}
 
 	return results, nil

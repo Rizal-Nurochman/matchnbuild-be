@@ -54,6 +54,9 @@ func (c *userController) GetAllUser(ctx *gin.Context) {
 	}
 
 	paginationResponse := pagination.CalculatePagination(filter.Pagination, total)
+	if users == nil {
+		users = []query.User{}
+	}
 	response := pagination.NewPaginatedResponse(http.StatusOK, dto.MESSAGE_SUCCESS_GET_LIST_USER, users, paginationResponse)
 	ctx.JSON(http.StatusOK, response)
 }

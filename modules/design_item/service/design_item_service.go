@@ -17,10 +17,10 @@ import (
 
 type (
 	designItemService struct {
-		designItemRepo  repository.DesignItemRepository
-		designerRepo    designerRepo.DesignerRepository
-		userPrefRepo    prefRepo.UserPreferenceRepository
-		db              *gorm.DB
+		designItemRepo repository.DesignItemRepository
+		designerRepo   designerRepo.DesignerRepository
+		userPrefRepo   prefRepo.UserPreferenceRepository
+		db             *gorm.DB
 	}
 
 	DesignItemService interface {
@@ -122,7 +122,7 @@ func (s *designItemService) GetAll(ctx context.Context) ([]dto.DesignItemRespons
 		return nil, err
 	}
 
-	var result []dto.DesignItemResponse
+	result := make([]dto.DesignItemResponse, 0, len(items))
 	for _, item := range items {
 		result = append(result, dto.ToDesignItemResponse(item))
 	}
@@ -144,7 +144,7 @@ func (s *designItemService) GetAllFeatures(ctx context.Context, category string)
 		return nil, err
 	}
 
-	var result []dto.FeatureResponse
+	result := make([]dto.FeatureResponse, 0, len(features))
 	for _, data := range features {
 		result = append(result, dto.FeatureResponse{
 			ID:   data.ID.String(),
@@ -175,7 +175,7 @@ func (s *designItemService) GetMyItems(ctx context.Context, userID string) ([]dt
 		return nil, err
 	}
 
-	var result []dto.DesignItemResponse
+	result := make([]dto.DesignItemResponse, 0, len(items))
 	for _, item := range items {
 		result = append(result, dto.ToDesignItemResponse(item))
 	}
@@ -325,7 +325,7 @@ func (s *designItemService) GetRecommendations(ctx context.Context, userID strin
 		return dto.RecommendationResponse{}, err
 	}
 
-	var responses []dto.DesignItemResponse
+	responses := make([]dto.DesignItemResponse, 0, len(items))
 	for _, item := range items {
 		responses = append(responses, dto.ToDesignItemResponse(item))
 	}
@@ -342,10 +342,6 @@ func (s *designItemService) GetRecommendations(ctx context.Context, userID strin
 		} else if hasStyleMatch || hasBudgetMatch || hasLocationMatch {
 			matchType = "partial"
 		}
-	}
-
-	if responses == nil {
-		responses = []dto.DesignItemResponse{}
 	}
 
 	return dto.RecommendationResponse{
