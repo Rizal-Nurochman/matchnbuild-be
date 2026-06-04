@@ -59,13 +59,6 @@ func ListDesignItemSeeder(db *gorm.DB) error {
 		return err
 	}
 
-	hasTable := db.Migrator().HasTable(&entities.DesignItem{})
-	if !hasTable {
-		if err := db.Migrator().CreateTable(&entities.DesignItem{}); err != nil {
-			return err
-		}
-	}
-
 	seededCount := 0
 	for i, seed := range seedItems {
 		// Check if already seeded by title

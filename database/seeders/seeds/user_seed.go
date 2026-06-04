@@ -26,13 +26,6 @@ func ListUserSeeder(db *gorm.DB) error {
 		return err
 	}
 
-	hasTable := db.Migrator().HasTable(&entities.User{})
-	if !hasTable {
-		if err := db.Migrator().CreateTable(&entities.User{}); err != nil {
-			return err
-		}
-	}
-
 	for _, data := range listUser {
 		var user entities.User
 		err := db.Where(&entities.User{Email: data.Email}).First(&user).Error
