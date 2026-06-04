@@ -27,14 +27,6 @@ func ListFeaturesSeeder(db *gorm.DB) error {
 		return err
 	}
 
-	hasTable := db.Migrator().HasTable(&entities.Feature{})
-	if !hasTable {
-		err := db.Migrator().CreateTable(&entities.Feature{})
-		if err != nil {
-			return err
-		}
-	}
-
 	for _, data := range listFeatures {
 		var feature entities.Feature
 		err := db.Where(&entities.Feature{Name: data.Name}).First(&feature).Error

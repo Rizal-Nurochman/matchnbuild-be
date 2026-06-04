@@ -39,13 +39,6 @@ func ListDesignerProfileSeeder(db *gorm.DB) error {
 		return err
 	}
 
-	hasTable := db.Migrator().HasTable(&entities.DesignerProfile{})
-	if !hasTable {
-		if err := db.Migrator().CreateTable(&entities.DesignerProfile{}); err != nil {
-			return err
-		}
-	}
-
 	seededCount := 0
 	for _, seed := range seedProfiles {
 		// Find user by email

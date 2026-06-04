@@ -83,9 +83,9 @@ func (s *authService) Register(ctx context.Context, req userDto.UserCreateReques
 	}
 
 	if req.Role == constants.ENUM_ROLE_DESIGNER {
-		profile:=entities.DesignerProfile{
-			ID: uuid.New(),
-			UserID: user.ID,
+		profile := entities.DesignerProfile{
+			ID:          uuid.New(),
+			UserID:      user.ID,
 			IsAvailable: true,
 		}
 
@@ -275,12 +275,12 @@ func (s *authService) SendPasswordReset(ctx context.Context, req dto.SendPasswor
 	resetToken := s.jwtService.GenerateAccessToken(user.ID.String(), "password_reset")
 
 	subject := "Password Reset"
-	
+
 	data := struct {
-		Name string
+		Name  string
 		Token string
 	}{
-		Name: user.Name,
+		Name:  user.Name,
 		Token: resetToken,
 	}
 
