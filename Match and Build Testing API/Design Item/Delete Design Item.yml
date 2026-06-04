@@ -2,13 +2,24 @@ info:
   name: Delete Design Item
   type: http
   seq: 6
+
 http:
   method: DELETE
   url: "{{base_url}}/design-items/{{design_item_id}}"
   headers:
     - name: Authorization
-      value: "Bearer {{access_token}}"
+      value: Bearer {{access_token}}
   auth: inherit
+
+runtime:
+  variables:
+    - name: base_url
+      value: http://localhost:8888/api/v1
+    - name: design_item_id
+      value: 16bbc22c-392b-4f31-ad74-633a2aeebde2
+    - name: access_token
+      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZTlmZmY5NDEtNTlhZi00N2RmLWJhYzktMTljNjUxMmI0ZDJlIiwicm9sZSI6ImRlc2lnbmVyIiwiaXNzIjoiVGVtcGxhdGUiLCJleHAiOjE3ODA1NDk0ODAsImlhdCI6MTc4MDU0ODU4MH0.R5dY2v4bExFKpUztynrpxP2XEwwVh6JKPKow3mJOqj0
+
 settings:
   encodeUrl: true
   timeout: 0

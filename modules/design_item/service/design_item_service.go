@@ -52,7 +52,7 @@ func NewDesignItemService(
 func (s *designItemService) Create(ctx context.Context, userID string, req dto.DesignItemCreateRequest) (dto.DesignItemResponse, error) {
 	designer, err := s.designerRepo.GetByUserID(ctx, nil, userID)
 	if err != nil {
-		return dto.DesignItemResponse{}, dto.ErrDesignItemNotFound
+		return dto.DesignItemResponse{}, errors.New("Designer profile not found")
 	}
 
 	helpers.SanitizeByCategory(&req)

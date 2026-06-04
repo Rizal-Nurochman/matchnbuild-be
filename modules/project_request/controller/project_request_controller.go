@@ -78,9 +78,9 @@ func (c *projectRequestController) GetMyRequests(ctx *gin.Context) {
 }
 
 func (c *projectRequestController) GetMyIncomingRequests(ctx *gin.Context) {
-	designerID := ctx.MustGet("user_id").(string)
+	userID := ctx.MustGet("user_id").(string)
 
-	result, err := c.projectRequestService.GetByDesignerID(ctx.Request.Context(), designerID)
+	result, err := c.projectRequestService.GetIncomingByUserID(ctx.Request.Context(), userID)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_PROJECT_REQUEST, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)

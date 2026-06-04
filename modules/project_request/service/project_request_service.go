@@ -18,6 +18,7 @@ type ProjectRequestService interface {
 	GetByID(ctx context.Context, id string) (dto.ProjectRequestResponse, error)
 	GetByClientID(ctx context.Context, clientID string) ([]dto.ProjectRequestResponse, error)
 	GetByDesignerID(ctx context.Context, designerID string) ([]dto.ProjectRequestResponse, error)
+	GetIncomingByUserID(ctx context.Context, userID string) ([]dto.ProjectRequestResponse, error)
 }
 
 type projectRequestService struct {
@@ -130,6 +131,20 @@ func (s *projectRequestService) GetByClientID(ctx context.Context, clientID stri
 
 func (s *projectRequestService) GetByDesignerID(ctx context.Context, designerID string) ([]dto.ProjectRequestResponse, error) {
 	prs, err := s.projectRequestRepo.GetByDesignerID(ctx, s.db, designerID)
+	if err != nil {
+		return nil, err
+	}
+
+	return toProjectRequestResponses(prs), nil
+}
+
+func (s *projectRequestService) GetIncomingByUserID(ctx context.Context, userID string) ([]dto.ProjectRequestResponse, error) {
+	designerProfile, err := s.designerProfileRepo.GetByUserID(ctx, s.db, userID)
+	if err != nil {
+		return nil, dto.ErrDesignerProfileNotFound
+	}
+
+	prs, err := s.projectRequestRepo.GetByDesignerID(ctx, s.db, designerProfile.ID.String())
 	if err != nil {
 		return nil, err
 	}

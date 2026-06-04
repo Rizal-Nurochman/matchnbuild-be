@@ -10,9 +10,9 @@ http:
     type: json
     data: |-
       {
-        "name": "Rizal",
+        "name": "Najwa",
         "email": "{{email}}",
-        "role": "client",
+        "role": "designer",
         "password": "{{password}}"
       }
   auth: inherit
@@ -22,9 +22,9 @@ runtime:
     - name: base_url
       value: http://localhost:8888/api/v1
     - name: email
-      value: muhamadrizalnurohman072005@gmail.com
+      value: najwafadhiilanisa@gmail.com
     - name: password
-      value: rizal123
+      value: najwa123
 
 settings:
   encodeUrl: true

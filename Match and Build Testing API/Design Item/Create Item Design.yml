@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: "{{base_url}}/design-item"
+  url: "{{base_url}}/design-items"
   headers:
     - name: Authorization
       value: Bearer {{token}}
@@ -16,17 +16,17 @@ http:
         "title": "Modern Minimalist House",
         "description": "Rumah modern minimalis dengan pencahayaan alami dan desain elegan",
         "style": "Modern",
-        "category": "",
-        "land_area_min": ,
-        "land_area_max": ,
-        "building_area": ,
-        "num_floors": ,
-        "num_bedrooms": ,
-        "room_type": "",
-        "room_area": ,
-        "estimated_budget": ,
-        "price_start_from": ,
-        "image_url": "https://example.com/image.jpg",
+        "category": "architecture",
+        "land_area_min": 20,
+        "land_area_max": 40,
+        "building_area": 50,
+        "num_floors": 2,
+        "num_bedrooms": 2,
+        // "room_type": "",
+        // "room_area": ,
+        "estimated_budget": 500000000,
+        "price_start_from": 400000000,
+        "image_url": "https://ik.imagekit.io/lemonne/design-items/Atlanta-Series_SZ8d893rn.webp",
         "feature_ids": [
           "feature-1",
           "feature-2",
@@ -39,6 +39,8 @@ runtime:
   variables:
     - name: base_url
       value: http://localhost:8888/api/v1
+    - name: token
+      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZTlmZmY5NDEtNTlhZi00N2RmLWJhYzktMTljNjUxMmI0ZDJlIiwicm9sZSI6ImRlc2lnbmVyIiwiaXNzIjoiVGVtcGxhdGUiLCJleHAiOjE3ODA1NDk0ODAsImlhdCI6MTc4MDU0ODU4MH0.R5dY2v4bExFKpUztynrpxP2XEwwVh6JKPKow3mJOqj0
 
 settings:
   encodeUrl: true

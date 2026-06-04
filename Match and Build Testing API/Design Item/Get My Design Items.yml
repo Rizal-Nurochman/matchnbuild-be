@@ -15,6 +15,8 @@ runtime:
   variables:
     - name: base_url
       value: http://localhost:8888/api/v1
+    - name: access_token
+      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZTlmZmY5NDEtNTlhZi00N2RmLWJhYzktMTljNjUxMmI0ZDJlIiwicm9sZSI6ImRlc2lnbmVyIiwiaXNzIjoiVGVtcGxhdGUiLCJleHAiOjE3ODA1NDk0ODAsImlhdCI6MTc4MDU0ODU4MH0.R5dY2v4bExFKpUztynrpxP2XEwwVh6JKPKow3mJOqj0
 
 settings:
   encodeUrl: true

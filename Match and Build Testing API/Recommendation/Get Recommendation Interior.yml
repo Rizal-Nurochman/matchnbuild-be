@@ -8,7 +8,7 @@ http:
   url: "{{base_url}}/recommendations"
   headers:
     - name: Authorization
-      value: "Bearer {{access_token}}"
+      value: Bearer {{access_token}}
     - name: Content-Type
       value: application/json
   body:
@@ -24,6 +24,13 @@ http:
         "limit": 10
       }
   auth: inherit
+
+runtime:
+  variables:
+    - name: base_url
+      value: http://localhost:8888/api/v1
+    - name: access_token
+      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjZlZmJiMzAtYmJjMy00NTFjLWFkM2UtMjQyZDM2Njk0YzQ5Iiwicm9sZSI6ImNsaWVudCIsImlzcyI6IlRlbXBsYXRlIiwiZXhwIjoxNzgwMjg2ODkwLCJpYXQiOjE3ODAyODU5OTB9.9Gk8_AJIWMcEBe_Hr0gpbBWtM6wiQ8SPF1_QzYmyKfA
 
 settings:
   encodeUrl: true
