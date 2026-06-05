@@ -29,16 +29,26 @@ type (
 		LayoutSketchURL  string  `json:"layout_sketch_url"`
 	}
 
+	ClientInfo struct {
+		ClientID string `json:"client_id"`
+		Name     string `json:"name"`
+	}
+
+	DesignerInfo struct {
+		DesignerID string `json:"designer_id"`
+		Name       string `json:"name"`
+	}
+
 	ProjectRequestResponse struct {
-		ID               string  `json:"id"`
-		ClientID         string  `json:"client_id"`
-		DesignerID       string  `json:"designer_id"`
-		Description      string  `json:"description"`
-		InitialBudget    float64 `json:"initial_budget"`
-		AreaSize         float64 `json:"area_size"`
-		LocationPhotoURL string  `json:"location_photo_url"`
-		LayoutSketchURL  string  `json:"layout_sketch_url"`
-		Status           string  `json:"status"`
-		ConversationID   string  `json:"conversation_id,omitempty"`
+		ID               string       `json:"id"`
+		Client           ClientInfo   `json:"client"`
+		Designer         DesignerInfo `json:"designer"`
+		Description      string       `json:"description"`
+		InitialBudget    float64      `json:"initial_budget"`
+		AreaSize         float64      `json:"area_size"`
+		LocationPhotoURL string       `json:"location_photo_url"`
+		LayoutSketchURL  string       `json:"layout_sketch_url"`
+		Status           string       `json:"status"`
+		ConversationID   string       `json:"conversation_id,omitempty"`
 	}
 )

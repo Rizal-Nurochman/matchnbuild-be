@@ -43,7 +43,10 @@ func (r *projectRequestRepository) GetByID(ctx context.Context, tx *gorm.DB, id 
 	}
 
 	var projectRequest entities.ProjectRequest
-	if err := tx.WithContext(ctx).Where("id = ?", id).Take(&projectRequest).Error; err != nil {
+	if err := tx.WithContext(ctx).
+		Preload("Client").
+		Preload("Designer.User").
+		Where("id = ?", id).Take(&projectRequest).Error; err != nil {
 		return entities.ProjectRequest{}, err
 	}
 
@@ -56,7 +59,10 @@ func (r *projectRequestRepository) GetByClientID(ctx context.Context, tx *gorm.D
 	}
 
 	var projectRequests []entities.ProjectRequest
-	if err := tx.WithContext(ctx).Where("client_id = ?", clientID).Find(&projectRequests).Error; err != nil {
+	if err := tx.WithContext(ctx).
+		Preload("Client").
+		Preload("Designer.User").
+		Where("client_id = ?", clientID).Find(&projectRequests).Error; err != nil {
 		return nil, err
 	}
 
@@ -69,7 +75,10 @@ func (r *projectRequestRepository) GetByDesignerID(ctx context.Context, tx *gorm
 	}
 
 	var projectRequests []entities.ProjectRequest
-	if err := tx.WithContext(ctx).Where("designer_id = ?", designerID).Find(&projectRequests).Error; err != nil {
+	if err := tx.WithContext(ctx).
+		Preload("Client").
+		Preload("Designer.User").
+		Where("designer_id = ?", designerID).Find(&projectRequests).Error; err != nil {
 		return nil, err
 	}
 

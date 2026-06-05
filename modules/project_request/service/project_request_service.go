@@ -97,18 +97,15 @@ func (s *projectRequestService) Create(ctx context.Context, req dto.ProjectReque
 		return dto.ProjectRequestResponse{}, err
 	}
 
-	return dto.ProjectRequestResponse{
-		ID:               createdPR.ID.String(),
-		ClientID:         createdPR.ClientID.String(),
-		DesignerID:       createdPR.DesignerID.String(),
-		Description:      createdPR.Description,
-		InitialBudget:    createdPR.InitialBudget.InexactFloat64(),
-		AreaSize:         createdPR.AreaSize,
-		LocationPhotoURL: createdPR.LocationPhotoURL,
-		LayoutSketchURL:  createdPR.LayoutSketchURL,
-		Status:           createdPR.Status,
-		ConversationID:   createdConv.ID.String(),
-	}, nil
+	fullPR, err := s.projectRequestRepo.GetByID(ctx, s.db, createdPR.ID.String())
+	if err != nil {
+		return dto.ProjectRequestResponse{}, err
+	}
+
+	response := toProjectRequestResponse(fullPR)
+	response.ConversationID = createdConv.ID.String()
+
+	return response, nil
 }
 
 func (s *projectRequestService) GetByID(ctx context.Context, id string) (dto.ProjectRequestResponse, error) {
@@ -154,9 +151,15 @@ func (s *projectRequestService) GetIncomingByUserID(ctx context.Context, userID 
 
 func toProjectRequestResponse(pr entities.ProjectRequest) dto.ProjectRequestResponse {
 	return dto.ProjectRequestResponse{
-		ID:               pr.ID.String(),
-		ClientID:         pr.ClientID.String(),
-		DesignerID:       pr.DesignerID.String(),
+		ID: pr.ID.String(),
+		Client: dto.ClientInfo{
+			ClientID: pr.ClientID.String(),
+			Name:     pr.Client.Name,
+		},
+		Designer: dto.DesignerInfo{
+			DesignerID: pr.DesignerID.String(),
+			Name:       pr.Designer.User.Name,
+		},
 		Description:      pr.Description,
 		InitialBudget:    pr.InitialBudget.InexactFloat64(),
 		AreaSize:         pr.AreaSize,
