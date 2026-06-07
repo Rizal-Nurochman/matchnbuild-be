@@ -21,7 +21,7 @@ type DesignItem struct {
 	RoomArea			 *float64				 `gorm:"type:float"`
 	EstimatedBudget decimal.Decimal `gorm:"type:decimal(15,2);not null"`
 	PriceStartFrom decimal.Decimal `gorm:"type:decimal(15,2);not null;default:0"`
-	ImageURL       string          `gorm:"type:varchar(255)"`
+	ImageURL       string          `gorm:"type:text"`
 	Location       string          `gorm:"type:varchar(100)"`
 
 	Designer    DesignerProfile `gorm:"foreignKey:DesignerID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`

@@ -27,11 +27,7 @@ http:
         "estimated_budget": 500000000,
         "price_start_from": 400000000,
         "image_url": "https://ik.imagekit.io/lemonne/design-items/Atlanta-Series_SZ8d893rn.webp",
-        "feature_ids": [
-          "feature-1",
-          "feature-2",
-          "feature-3"
-        ]
+        "feature_ids": []
       }
   auth: inherit
 
