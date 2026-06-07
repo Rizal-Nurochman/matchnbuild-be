@@ -2,12 +2,13 @@ info:
   name: Create Project Request
   type: http
   seq: 1
+
 http:
   method: POST
   url: "{{base_url}}/project-request"
   headers:
     - name: Authorization
-      value: "Bearer {{access_token}}"
+      value: Bearer {{access_token}}
   body:
     type: json
     data: |-
@@ -20,15 +21,7 @@ http:
         "layout_sketch_url": "https://example.com/sketch.jpg"
       }
   auth: inherit
-script:
-  post-response:
-    - script: |-
-        if (res.status === 201) {
-          const body = res.body;
-          if (body.data && body.data.id) {
-            bru.setEnvVar("project_request_id", body.data.id);
-          }
-        }
+
 settings:
   encodeUrl: true
   timeout: 0

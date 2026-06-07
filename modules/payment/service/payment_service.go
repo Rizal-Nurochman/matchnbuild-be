@@ -6,6 +6,7 @@ import (
 	"crypto/subtle"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -85,7 +86,7 @@ func (s *paymentService) CreateSnapToken(ctx context.Context, orderID string, us
 
 		now := time.Now()
 		expiresAt := now.Add(time.Duration(s.config.ExpiryMinutes) * time.Minute)
-		midtransOrderID := fmt.Sprintf("MNB-%s-%d", order.ID.String(), now.Unix())
+		midtransOrderID := buildMidtransOrderID(order.ID, now)
 		payment := entities.Payment{
 			ID:              uuid.New(),
 			OrderID:         order.ID,
@@ -263,6 +264,12 @@ func amountToIDR(amount decimal.Decimal) (int64, error) {
 		return 0, dto.ErrInvalidAmount
 	}
 	return amount.IntPart(), nil
+}
+
+func buildMidtransOrderID(orderID uuid.UUID, now time.Time) string {
+	uuidPart := strings.ReplaceAll(orderID.String(), "-", "")[:8]
+	timePart := strings.ToUpper(strconv.FormatInt(now.Unix(), 36))
+	return fmt.Sprintf("MNB-%s-%s", timePart, strings.ToUpper(uuidPart))
 }
 
 func verifySignature(notification dto.NotificationRequest, serverKey string) bool {

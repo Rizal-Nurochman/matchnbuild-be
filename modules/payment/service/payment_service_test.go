@@ -4,9 +4,11 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"testing"
+	"time"
 
 	"github.com/Rizal-Nurochman/matchnbuild/modules/payment/dto"
 	"github.com/Rizal-Nurochman/matchnbuild/pkg/constants"
+	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -41,6 +43,15 @@ func TestAmountToIDR(t *testing.T) {
 
 	_, err = amountToIDR(decimal.RequireFromString("150000.50"))
 	assert.ErrorIs(t, err, dto.ErrInvalidAmount)
+}
+
+func TestBuildMidtransOrderID(t *testing.T) {
+	orderID := uuid.MustParse("123e4567-e89b-12d3-a456-426614174000")
+	midtransOrderID := buildMidtransOrderID(orderID, time.Unix(1710000000, 0))
+
+	assert.LessOrEqual(t, len(midtransOrderID), 30)
+	assert.Contains(t, midtransOrderID, "MNB-")
+	assert.Contains(t, midtransOrderID, "123E4567")
 }
 
 func TestNormalizePaymentStatus(t *testing.T) {

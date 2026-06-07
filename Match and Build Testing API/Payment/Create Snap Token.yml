@@ -8,21 +8,17 @@ http:
   url: "{{base_url}}/payment/{{order_id}}/snap-token"
   headers:
     - name: Authorization
-      value: "Bearer {{access_token}}"
+      value: Bearer {{access_token}}
   auth: inherit
 
-script:
-  post-response:
-    - script: |-
-        if (res.status === 201) {
-          const body = res.body;
-          if (body.data) {
-            bru.setEnvVar("payment_id", body.data.payment_id || "");
-            bru.setEnvVar("midtrans_order_id", body.data.midtrans_order_id || "");
-            bru.setEnvVar("snap_token", body.data.snap_token || "");
-            bru.setEnvVar("snap_redirect_url", body.data.redirect_url || "");
-          }
-        }
+runtime:
+  variables:
+    - name: base_url
+      value: http://localhost:8888/api/v1
+    - name: order_id
+      value: 57fb7cd1-29c1-4692-ab32-ddfd0b355ff2
+    - name: access_token
+      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjZlZmJiMzAtYmJjMy00NTFjLWFkM2UtMjQyZDM2Njk0YzQ5Iiwicm9sZSI6ImNsaWVudCIsImlzcyI6IlRlbXBsYXRlIiwiZXhwIjoxNzgwODU0NTkwLCJpYXQiOjE3ODA4NTM2OTB9.zRzeezB03xo6dDQ09ioBtKrJvYqHwfy7FKMxzYYUNZU
 
 settings:
   encodeUrl: true
