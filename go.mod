@@ -13,6 +13,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/imagekit-developer/imagekit-go/v2 v2.2.0
 	github.com/joho/godotenv v1.5.1
+	github.com/midtrans/midtrans-go v1.3.8
 	github.com/samber/do v1.6.0
 	github.com/shopspring/decimal v1.4.0
 	github.com/spf13/viper v1.20.0

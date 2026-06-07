@@ -41,10 +41,12 @@ const (
 
 	// Payment Status (Midtrans)
 	PAYMENT_STATUS_PENDING    = "Pending"
+	PAYMENT_STATUS_CAPTURE    = "Capture"
 	PAYMENT_STATUS_SETTLEMENT = "Settlement"
 	PAYMENT_STATUS_EXPIRE     = "Expire"
 	PAYMENT_STATUS_CANCEL     = "Cancel"
 	PAYMENT_STATUS_DENY       = "Deny"
+	PAYMENT_STATUS_REFUND     = "Refund"
 
 	// Message Type
 	MESSAGE_TYPE_TEXT  = "Text"

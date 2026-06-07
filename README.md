@@ -222,6 +222,47 @@ http://your-domain/logs
 ### API Documentation
 Explore the available endpoints and their usage in the [Postman Documentation](https://documenter.getpostman.com/view/29665461/2s9YJaZQCG). This documentation provides a comprehensive overview of the API endpoints, including request and response examples.
 
+### Midtrans Payment
+
+The payment module uses Midtrans Snap. Configure these environment variables:
+
+```env
+MIDTRANS_SERVER_KEY=SB-Mid-server-...
+MIDTRANS_CLIENT_KEY=SB-Mid-client-...
+MIDTRANS_ENVIRONMENT=sandbox
+MIDTRANS_NOTIFICATION_URL=https://your-public-api.example.com/api/v1/payment/notification
+MIDTRANS_FINISH_URL=https://your-frontend.example.com/payment/finish
+MIDTRANS_EXPIRY_MINUTES=60
+```
+
+Available endpoints:
+
+```text
+POST /api/v1/payment/:order_id/snap-token  Bearer token required
+GET  /api/v1/payment/:order_id/status      Bearer token required
+POST /api/v1/payment/notification          Public Midtrans webhook
+```
+
+Set the Payment Notification URL in the Midtrans dashboard to the same HTTPS
+URL as `MIDTRANS_NOTIFICATION_URL`. The webhook verifies the Midtrans SHA-512
+signature and confirms the transaction using the Get Status API before updating
+the local payment and order.
+
+The frontend loads the appropriate Snap script and uses the returned token:
+
+```html
+<script
+  src="https://app.sandbox.midtrans.com/snap/snap.js"
+  data-client-key="SB-Mid-client-...">
+</script>
+<script>
+  snap.pay(response.data.snap_token);
+</script>
+```
+
+For production, set `MIDTRANS_ENVIRONMENT=production` and load
+`https://app.midtrans.com/snap/snap.js`.
+
 ### Contributing
 We welcome contributions! The repository includes templates for issues and pull requests to standardize contributions and improve the quality of discussions and code reviews.
 

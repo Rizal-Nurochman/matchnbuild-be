@@ -11,20 +11,24 @@ import (
 	designerController "github.com/Rizal-Nurochman/matchnbuild/modules/designer/controller"
 	designerRepo "github.com/Rizal-Nurochman/matchnbuild/modules/designer/repository"
 	designerService "github.com/Rizal-Nurochman/matchnbuild/modules/designer/service"
+	paymentController "github.com/Rizal-Nurochman/matchnbuild/modules/payment/controller"
+	paymentGateway "github.com/Rizal-Nurochman/matchnbuild/modules/payment/gateway"
+	paymentRepo "github.com/Rizal-Nurochman/matchnbuild/modules/payment/repository"
+	paymentService "github.com/Rizal-Nurochman/matchnbuild/modules/payment/service"
 	prController "github.com/Rizal-Nurochman/matchnbuild/modules/project_request/controller"
 	prRepo "github.com/Rizal-Nurochman/matchnbuild/modules/project_request/repository"
 	prService "github.com/Rizal-Nurochman/matchnbuild/modules/project_request/service"
 	qController "github.com/Rizal-Nurochman/matchnbuild/modules/quotation/controller"
 	qRepo "github.com/Rizal-Nurochman/matchnbuild/modules/quotation/repository"
 	qService "github.com/Rizal-Nurochman/matchnbuild/modules/quotation/service"
+	recController "github.com/Rizal-Nurochman/matchnbuild/modules/recommendation/controller"
+	recService "github.com/Rizal-Nurochman/matchnbuild/modules/recommendation/service"
 	userController "github.com/Rizal-Nurochman/matchnbuild/modules/user/controller"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/user/repository"
 	userService "github.com/Rizal-Nurochman/matchnbuild/modules/user/service"
 	userPreferenceHandler "github.com/Rizal-Nurochman/matchnbuild/modules/user_preferences/controller"
 	userPreferenceRepo "github.com/Rizal-Nurochman/matchnbuild/modules/user_preferences/repository"
 	userPreferenceService "github.com/Rizal-Nurochman/matchnbuild/modules/user_preferences/service"
-	recController "github.com/Rizal-Nurochman/matchnbuild/modules/recommendation/controller"
-	recService "github.com/Rizal-Nurochman/matchnbuild/modules/recommendation/service"
 	"github.com/Rizal-Nurochman/matchnbuild/pkg/constants"
 	"github.com/samber/do"
 	"gorm.io/gorm"
@@ -57,6 +61,9 @@ func RegisterDependencies(injector *do.Injector) {
 	designerRepository := designerRepo.NewDesignerProfileRepository(db)
 	designItemRepository := desigItemRepo.NewDesignItemRepository(db)
 	userPreferencesRepository := userPreferenceRepo.NewUserPreferenceRepository(db)
+	paymentRepository := paymentRepo.NewPaymentRepository(db)
+	midtransConfig := config.LoadMidtransConfig()
+	midtransGateway := paymentGateway.NewMidtransGateway(midtransConfig)
 
 	// Services
 	userSvc := userService.NewUserService(userRepository, db)
@@ -67,6 +74,7 @@ func RegisterDependencies(injector *do.Injector) {
 	desigItemSvc := desigItemService.NewDesignItemService(designItemRepository, designerRepository, userPreferencesRepository, db)
 	userPrencesSvc := userPreferenceService.NewUserPreferenceService(userPreferencesRepository)
 	recommendationSvc := recService.NewRecommendationService(designItemRepository)
+	paymentSvc := paymentService.NewPaymentService(paymentRepository, midtransGateway, midtransConfig, db)
 
 	// Controllers
 	do.Provide(
@@ -115,5 +123,11 @@ func RegisterDependencies(injector *do.Injector) {
 		injector, func(i *do.Injector) (recController.RecommendationHandler, error) {
 			return recController.NewRecommendationHandler(recommendationSvc), nil
 		},
-	)	
+	)
+
+	do.Provide(
+		injector, func(i *do.Injector) (paymentController.PaymentController, error) {
+			return paymentController.NewPaymentController(paymentSvc), nil
+		},
+	)
 }
