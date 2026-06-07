@@ -1,0 +1,28 @@
+info:
+  name: Midtrans Notification Webhook
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{base_url}}/payment/notification"
+  body:
+    type: json
+    data: |-
+      {
+        "order_id": "{{midtrans_order_id}}",
+        "status_code": "200",
+        "gross_amount": "750000000.00",
+        "signature_key": "{{midtrans_signature_key}}",
+        "transaction_id": "test-transaction-id",
+        "transaction_status": "settlement",
+        "fraud_status": "accept",
+        "payment_type": "bank_transfer"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

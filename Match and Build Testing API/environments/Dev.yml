@@ -20,5 +20,17 @@ variables:
     value: ""
   - name: quotation_id
     value: ""
+  - name: order_id
+    value: ""
+  - name: payment_id
+    value: ""
+  - name: midtrans_order_id
+    value: ""
+  - name: snap_token
+    value: ""
+  - name: snap_redirect_url
+    value: ""
+  - name: midtrans_signature_key
+    value: ""
   - name: preference_id
     value: ""
