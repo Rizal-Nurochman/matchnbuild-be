@@ -15,12 +15,21 @@ http:
       {
         "designer_id": "{{designer_id}}",
         "description": "I want to build a modern minimalist house",
-        "initial_budget": 5000000000,
+        "initial_budget": 1,
         "area_size": 200,
         "location_photo_url": "https://example.com/location.jpg",
         "layout_sketch_url": "https://example.com/sketch.jpg"
       }
   auth: inherit
+
+runtime:
+  variables:
+    - name: base_url
+      value: http://localhost:8888/api/v1
+    - name: access_token
+      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjZlZmJiMzAtYmJjMy00NTFjLWFkM2UtMjQyZDM2Njk0YzQ5Iiwicm9sZSI6ImNsaWVudCIsImlzcyI6IlRlbXBsYXRlIiwiZXhwIjoxNzgwODkwMTc5LCJpYXQiOjE3ODA4ODkyNzl9.FapWTLuiIUpWzfvwbStVBLIf6C6LSGdCyjqEWJFgrgo
+    - name: designer_id
+      value: 7a5c00df-3a43-45d7-8f6e-0c5b68a39ecc
 
 settings:
   encodeUrl: true

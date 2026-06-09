@@ -8,8 +8,17 @@ http:
   url: "{{base_url}}/payment/{{order_id}}/status"
   headers:
     - name: Authorization
-      value: "Bearer {{access_token}}"
+      value: Bearer {{access_token}}
   auth: inherit
+
+runtime:
+  variables:
+    - name: order_id
+      value: e23905de-4652-41a5-800d-9da34a6a2f2f
+    - name: base_url
+      value: http://localhost:8888/api/v1
+    - name: access_token
+      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjZlZmJiMzAtYmJjMy00NTFjLWFkM2UtMjQyZDM2Njk0YzQ5Iiwicm9sZSI6ImNsaWVudCIsImlzcyI6IlRlbXBsYXRlIiwiZXhwIjoxNzgwODkwNTA3LCJpYXQiOjE3ODA4ODk2MDd9.a_hvxowr_Gtr1GvPBBxxjiTWHCvX7Cj9me4NFj_a-F4
 
 settings:
   encodeUrl: true

@@ -16,9 +16,9 @@ runtime:
     - name: base_url
       value: http://localhost:8888/api/v1
     - name: access_token
-      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjZlZmJiMzAtYmJjMy00NTFjLWFkM2UtMjQyZDM2Njk0YzQ5Iiwicm9sZSI6ImNsaWVudCIsImlzcyI6IlRlbXBsYXRlIiwiZXhwIjoxNzgwODU0NTkwLCJpYXQiOjE3ODA4NTM2OTB9.zRzeezB03xo6dDQ09ioBtKrJvYqHwfy7FKMxzYYUNZU
+      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjZlZmJiMzAtYmJjMy00NTFjLWFkM2UtMjQyZDM2Njk0YzQ5Iiwicm9sZSI6ImNsaWVudCIsImlzcyI6IlRlbXBsYXRlIiwiZXhwIjoxNzgwODkwNTA3LCJpYXQiOjE3ODA4ODk2MDd9.a_hvxowr_Gtr1GvPBBxxjiTWHCvX7Cj9me4NFj_a-F4
     - name: quotation_id
-      value: db8acdb6-8988-4f33-8aac-25aaefc0d57b
+      value: 61592642-56cc-4c71-ab12-ea561aebfc44
 
 settings:
   encodeUrl: true

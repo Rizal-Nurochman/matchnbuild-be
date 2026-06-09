@@ -20,9 +20,9 @@ runtime:
     - name: base_url
       value: http://localhost:8888/api/v1
     - name: verification_code
-      value: "690434"
+      value: "984584"
     - name: email
-      value: najwafadhiilanisa@gmail.com
+      value: dejongfrenkie26@gmail.com
 
 settings:
   encodeUrl: true

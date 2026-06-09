@@ -8,8 +8,13 @@ http:
   url: "{{base_url}}/designers"
   headers:
     - name: Authorization
-      value: "Bearer {{access_token}}"
+      value: Bearer {{access_token}}
   auth: inherit
+
+runtime:
+  variables:
+    - name: base_url
+      value: http://localhost:8888/api/v1
 
 settings:
   encodeUrl: true

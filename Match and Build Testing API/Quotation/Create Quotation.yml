@@ -15,7 +15,7 @@ http:
       {
         "project_request_id": "{{project_request_id}}",
         "scope_of_work": "Complete design and construction of modern house",
-        "offered_price": 750000000,
+        "offered_price": 2,
         "duration_days": 120
       }
   auth: inherit
@@ -23,11 +23,11 @@ http:
 runtime:
   variables:
     - name: access_token
-      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZTlmZmY5NDEtNTlhZi00N2RmLWJhYzktMTljNjUxMmI0ZDJlIiwicm9sZSI6ImRlc2lnbmVyIiwiaXNzIjoiVGVtcGxhdGUiLCJleHAiOjE3ODA4NTQxMzgsImlhdCI6MTc4MDg1MzIzOH0.4vtk0KYimyEUdDZSj2JxDt6x048Q4sQRajSNAJUbvE0
+      value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjZiMGZjYWMtN2MzMi00ZjU2LTk0MmItYjFiMDU1ZTc2ZWYzIiwicm9sZSI6ImRlc2lnbmVyIiwiaXNzIjoiVGVtcGxhdGUiLCJleHAiOjE3ODA4OTA0NDksImlhdCI6MTc4MDg4OTU0OX0.4Iv1JYgNYan_sWR4fkDiLcGYY1G2AOc_r9SZu7ZRq24
     - name: base_url
       value: http://localhost:8888/api/v1
     - name: project_request_id
-      value: a6360b6e-f685-4473-8f2d-f9490d3b99e2
+      value: 1a5580ad-7537-4d8d-9d36-7462806185dc
 
 settings:
   encodeUrl: true

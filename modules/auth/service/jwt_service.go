@@ -35,8 +35,8 @@ func NewJWTService() JWTService {
 	return &jwtService{
 		secretKey:     getSecretKey(),
 		issuer:        "Template",
-		accessExpiry:  time.Minute * 15,
-		refreshExpiry: time.Hour * 24 * 7,
+		accessExpiry:  time.Hour * 24,   
+		refreshExpiry: time.Hour * 24 * 30,
 	}
 }
 
