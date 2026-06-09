@@ -21,6 +21,7 @@ type User struct {
 	DesignerProfile *DesignerProfile `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	ProjectRequests []ProjectRequest `gorm:"foreignKey:ClientID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	Messages        []Message        `gorm:"foreignKey:SenderID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	ConversationParticipants []ConversationParticipant `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 
 	Timestamp
 }
