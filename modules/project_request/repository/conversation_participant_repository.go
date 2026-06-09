@@ -9,8 +9,8 @@ import (
 
 type (
 	ConversationParticipantRepository interface {
-	CreateMany(ctx context.Context, tx *gorm.DB, participants []entities.ConversationParticipant) error
-}
+		CreateMany(ctx context.Context, tx *gorm.DB, participants []entities.ConversationParticipant) error
+	}
 
 	conversationParticipantRepository struct {
 		db *gorm.DB

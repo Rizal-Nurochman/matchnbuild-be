@@ -54,6 +54,7 @@ func RegisterDependencies(injector *do.Injector) {
 	userRepository := repository.NewUserRepository(db)
 	refreshTokenRepository := authRepo.NewRefreshTokenRepository(db)
 	projectRequestRepository := prRepo.NewProjectRequestRepository(db)
+	conversationParticipantRepository := prRepo.NewConversationParticipantRepository(db)
 	conversationRepository := prRepo.NewConversationRepository(db)
 	designerProfileRepository := prRepo.NewDesignerProfileRepository(db)
 	quotationRepository := qRepo.NewQuotationRepository(db)
@@ -68,7 +69,7 @@ func RegisterDependencies(injector *do.Injector) {
 	// Services
 	userSvc := userService.NewUserService(userRepository, db)
 	authSvc := authService.NewAuthService(userRepository, refreshTokenRepository, jwtService, db)
-	projectRequestSvc := prService.NewProjectRequestService(projectRequestRepository, conversationRepository, designerProfileRepository, db)
+	projectRequestSvc := prService.NewProjectRequestService(projectRequestRepository, conversationRepository,  designerProfileRepository, conversationParticipantRepository, db)
 	quotationSvc := qService.NewQuotationService(quotationRepository, orderRepository, projectRequestRepository, designerProfileRepository, db)
 	designerSvc := designerService.NewDesignerProfileService(designerRepository, db)
 	desigItemSvc := desigItemService.NewDesignItemService(designItemRepository, designerRepository, userPreferencesRepository, db)

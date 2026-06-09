@@ -25,6 +25,7 @@ type projectRequestService struct {
 	projectRequestRepo   repository.ProjectRequestRepository
 	conversationRepo     repository.ConversationRepository
 	designerProfileRepo  repository.DesignerProfileRepository
+	conversationParticipantRepo repository.ConversationParticipantRepository
 	db                   *gorm.DB
 }
 
@@ -32,12 +33,14 @@ func NewProjectRequestService(
 	prRepo repository.ProjectRequestRepository,
 	convRepo repository.ConversationRepository,
 	dpRepo repository.DesignerProfileRepository,
+	participantRepo repository.ConversationParticipantRepository,
 	db *gorm.DB,
 ) ProjectRequestService {
 	return &projectRequestService{
 		projectRequestRepo:  prRepo,
 		conversationRepo:    convRepo,
 		designerProfileRepo: dpRepo,
+		conversationParticipantRepo: participantRepo,
 		db:                  db,
 	}
 }
