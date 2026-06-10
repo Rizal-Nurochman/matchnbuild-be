@@ -65,7 +65,7 @@ func (s *projectRequestService) Create(ctx context.Context, req dto.ProjectReque
 		return dto.ProjectRequestResponse{}, fmt.Errorf("invalid designer id: %w", err)
 	}
 
-	tx := s.db.Begin()
+	tx := s.db.WithContext(ctx).Begin()
 
 	projectRequest := entities.ProjectRequest{
 		ID:               uuid.New(),
@@ -92,6 +92,25 @@ func (s *projectRequestService) Create(ctx context.Context, req dto.ProjectReque
 
 	createdConv, err := s.conversationRepo.Create(ctx, tx, conversation)
 	if err != nil {
+		tx.Rollback()
+		return dto.ProjectRequestResponse{}, err
+	}
+
+	participants := []entities.ConversationParticipant{
+		{
+			ConversationID: createdConv.ID,
+			UserID:         clientUUID,
+			Role:           constants.ENUM_ROLE_CLIENT,
+		},
+		{
+			ConversationID: createdConv.ID,
+			UserID:         designerProfile.UserID,
+			Role:           constants.ENUM_ROLE_DESIGNER,
+		},
+	}
+
+	if err := s.conversationParticipantRepo.CreateMany(ctx, tx, participants);
+	err != nil {
 		tx.Rollback()
 		return dto.ProjectRequestResponse{}, err
 	}
