@@ -16,6 +16,7 @@ import (
 type QuotationService interface {
 	Create(ctx context.Context, req dto.QuotationCreateRequest, designerID string) (dto.QuotationResponse, error)
 	GetByID(ctx context.Context, id string) (dto.QuotationResponse, error)
+	GetByProjectRequestID(ctx context.Context, projectRequestID string) ([]dto.QuotationResponse, error)
 	Accept(ctx context.Context, quotationID string, clientID string) (dto.QuotationAcceptResponse, error)
 	Reject(ctx context.Context, quotationID string, clientID string) error
 }
@@ -81,8 +82,22 @@ func (s *quotationService) Create(ctx context.Context, req dto.QuotationCreateRe
 		Status:           constants.QUOTATION_STATUS_PENDING,
 	}
 
-	created, err := s.quotationRepo.Create(ctx, s.db, quotation)
+	tx := s.db.Begin()
+
+	created, err := s.quotationRepo.Create(ctx, tx, quotation)
 	if err != nil {
+		tx.Rollback()
+		return dto.QuotationResponse{}, err
+	}
+
+	pr.Status = constants.PROJECT_REQUEST_STATUS_QUOTATION
+	_, err = s.projectRequestRepo.Update(ctx, tx, pr)
+	if err != nil {
+		tx.Rollback()
+		return dto.QuotationResponse{}, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
 		return dto.QuotationResponse{}, err
 	}
 
@@ -96,6 +111,19 @@ func (s *quotationService) GetByID(ctx context.Context, id string) (dto.Quotatio
 	}
 
 	return toQuotationResponse(q), nil
+}
+
+func (s *quotationService) GetByProjectRequestID(ctx context.Context, projectRequestID string) ([]dto.QuotationResponse, error) {
+	quotations, err := s.quotationRepo.GetListByProjectRequestID(ctx, s.db, projectRequestID)
+	if err != nil {
+		return nil, err
+	}
+
+	responses := make([]dto.QuotationResponse, len(quotations))
+	for i, q := range quotations {
+		responses[i] = toQuotationResponse(q)
+	}
+	return responses, nil
 }
 
 func (s *quotationService) Accept(ctx context.Context, quotationID string, clientID string) (dto.QuotationAcceptResponse, error) {

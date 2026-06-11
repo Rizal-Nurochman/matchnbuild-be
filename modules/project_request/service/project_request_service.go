@@ -172,6 +172,25 @@ func (s *projectRequestService) GetIncomingByUserID(ctx context.Context, userID 
 }
 
 func toProjectRequestResponse(pr entities.ProjectRequest) dto.ProjectRequestResponse {
+	quotations := make([]dto.QuotationInfo, 0, len(pr.Quotations))
+	for _, q := range pr.Quotations {
+		qi := dto.QuotationInfo{
+			ID:           q.ID.String(),
+			ScopeOfWork:  q.ScopeOfWork,
+			OfferedPrice: q.OfferedPrice.InexactFloat64(),
+			DurationDays: q.DurationDays,
+			Status:       q.Status,
+		}
+		if q.Order != nil {
+			qi.Order = &dto.OrderInfo{
+				ID:            q.Order.ID.String(),
+				PaymentStatus: q.Order.PaymentStatus,
+				WorkStatus:    q.Order.WorkStatus,
+			}
+		}
+		quotations = append(quotations, qi)
+	}
+
 	return dto.ProjectRequestResponse{
 		ID: pr.ID.String(),
 		Client: dto.ClientInfo{
@@ -188,6 +207,7 @@ func toProjectRequestResponse(pr entities.ProjectRequest) dto.ProjectRequestResp
 		LocationPhotoURL: pr.LocationPhotoURL,
 		LayoutSketchURL:  pr.LayoutSketchURL,
 		Status:           pr.Status,
+		Quotations:       quotations,
 	}
 }
 

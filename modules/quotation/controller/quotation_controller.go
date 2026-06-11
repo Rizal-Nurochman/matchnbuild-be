@@ -13,6 +13,7 @@ type (
 	QuotationController interface {
 		Create(ctx *gin.Context)
 		GetByID(ctx *gin.Context)
+		GetByProjectRequestID(ctx *gin.Context)
 		Accept(ctx *gin.Context)
 		Reject(ctx *gin.Context)
 	}
@@ -56,6 +57,20 @@ func (c *quotationController) GetByID(ctx *gin.Context) {
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_QUOTATION, err.Error(), nil)
 		ctx.JSON(http.StatusNotFound, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_QUOTATION, result)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (c *quotationController) GetByProjectRequestID(ctx *gin.Context) {
+	projectRequestID := ctx.Param("project_request_id")
+
+	result, err := c.quotationService.GetByProjectRequestID(ctx.Request.Context(), projectRequestID)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_QUOTATION, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
 

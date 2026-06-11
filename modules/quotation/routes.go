@@ -17,6 +17,7 @@ func RegisterRoutes(server *gin.RouterGroup, injector *do.Injector) {
 	{
 		qRoutes.POST("", middlewares.Authenticate(jwtService), qController.Create)
 		qRoutes.GET("/:id", middlewares.Authenticate(jwtService), qController.GetByID)
+		qRoutes.GET("/project-request/:project_request_id", middlewares.Authenticate(jwtService), qController.GetByProjectRequestID)
 		qRoutes.PUT("/:id/accept", middlewares.Authenticate(jwtService), qController.Accept)
 		qRoutes.PUT("/:id/reject", middlewares.Authenticate(jwtService), qController.Reject)
 	}

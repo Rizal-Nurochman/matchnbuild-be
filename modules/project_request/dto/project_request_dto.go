@@ -39,16 +39,32 @@ type (
 		Name       string `json:"name"`
 	}
 
+	OrderInfo struct {
+		ID            string `json:"id"`
+		PaymentStatus string `json:"payment_status"`
+		WorkStatus    string `json:"work_status"`
+	}
+
+	QuotationInfo struct {
+		ID           string     `json:"id"`
+		ScopeOfWork  string     `json:"scope_of_work"`
+		OfferedPrice float64    `json:"offered_price"`
+		DurationDays int        `json:"duration_days"`
+		Status       string     `json:"status"`
+		Order        *OrderInfo `json:"order,omitempty"`
+	}
+
 	ProjectRequestResponse struct {
-		ID               string       `json:"id"`
-		Client           ClientInfo   `json:"client"`
-		Designer         DesignerInfo `json:"designer"`
-		Description      string       `json:"description"`
-		InitialBudget    float64      `json:"initial_budget"`
-		AreaSize         float64      `json:"area_size"`
-		LocationPhotoURL string       `json:"location_photo_url"`
-		LayoutSketchURL  string       `json:"layout_sketch_url"`
-		Status           string       `json:"status"`
-		ConversationID   string       `json:"conversation_id,omitempty"`
+		ID               string          `json:"id"`
+		Client           ClientInfo      `json:"client"`
+		Designer         DesignerInfo    `json:"designer"`
+		Description      string          `json:"description"`
+		InitialBudget    float64         `json:"initial_budget"`
+		AreaSize         float64         `json:"area_size"`
+		LocationPhotoURL string          `json:"location_photo_url"`
+		LayoutSketchURL  string          `json:"layout_sketch_url"`
+		Status           string          `json:"status"`
+		Quotations       []QuotationInfo `json:"quotations"`
+		ConversationID   string          `json:"conversation_id,omitempty"`
 	}
 )
