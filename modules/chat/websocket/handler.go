@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	chatDto "github.com/Rizal-Nurochman/matchnbuild/modules/chat/dto"
@@ -16,29 +17,23 @@ import (
 	"gorm.io/gorm"
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
 type Handler struct {
-	hub        *Hub
-	chatSvc    service.ChatService
-	userRepo   repository.UserRepository
-	jwtService authService.JWTService
-	db         *gorm.DB
+	hub           *Hub
+	chatSvc       service.ChatService
+	userRepo      repository.UserRepository
+	jwtService    authService.JWTService
+	db            *gorm.DB
+	allowedOrigin string
 }
 
-func NewHandler(hub *Hub, chatSvc service.ChatService, userRepo repository.UserRepository, jwtService authService.JWTService, db *gorm.DB) *Handler {
+func NewHandler(hub *Hub, chatSvc service.ChatService, userRepo repository.UserRepository, jwtService authService.JWTService, db *gorm.DB, allowedOrigin string) *Handler {
 	h := &Handler{
-		hub:        hub,
-		chatSvc:    chatSvc,
-		userRepo:   userRepo,
-		jwtService: jwtService,
-		db:         db,
+		hub:           hub,
+		chatSvc:       chatSvc,
+		userRepo:      userRepo,
+		jwtService:    jwtService,
+		db:            db,
+		allowedOrigin: allowedOrigin,
 	}
 
 	hub.SetOnPresence(h.handlePresenceChange)
@@ -46,21 +41,39 @@ func NewHandler(hub *Hub, chatSvc service.ChatService, userRepo repository.UserR
 }
 
 func (h *Handler) HandleWebSocket(ctx *gin.Context) {
+	origin := ctx.Request.Header.Get("Origin")
+	if h.allowedOrigin != "" && !h.isOriginAllowed(origin) {
+		ctx.JSON(http.StatusForbidden, gin.H{"error": "origin not allowed"})
+		h.hub.IncrementErrors()
+		return
+	}
+
 	token := ctx.Query("token")
 	if token == "" {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "token required"})
+		h.hub.IncrementErrors()
 		return
 	}
 
 	userID, err := h.jwtService.GetUserIDByToken(token)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+		h.hub.IncrementErrors()
 		return
+	}
+
+	upgrader := websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			return h.isOriginAllowed(r.Header.Get("Origin"))
+		},
 	}
 
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
 		log.Printf("[WS] upgrade failed: %v", err)
+		h.hub.IncrementErrors()
 		return
 	}
 
@@ -69,6 +82,13 @@ func (h *Handler) HandleWebSocket(ctx *gin.Context) {
 
 	go client.WritePump()
 	go client.ReadPump(h.handleEvent)
+}
+
+func (h *Handler) isOriginAllowed(origin string) bool {
+	if h.allowedOrigin == "" {
+		return true
+	}
+	return strings.HasPrefix(origin, h.allowedOrigin)
 }
 
 func (h *Handler) handleEvent(client *Client, msg IncomingMessage) {

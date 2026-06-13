@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -17,8 +18,15 @@ type Hub struct {
 	leaveRoom  chan *ClientRoom
 	broadcast  chan *RoomMessage
 	userMsg    chan *UserMessage
+	shutdown   chan struct{}
 	mu         sync.RWMutex
 	onPresence func(userID string, isOnline bool, lastSeenAt *time.Time)
+
+	// metrics
+	totalConnections   int64
+	activeConnections  int64
+	totalMessages      int64
+	totalErrors        int64
 }
 
 func (h *Hub) SetOnPresence(fn func(userID string, isOnline bool, lastSeenAt *time.Time)) {
@@ -52,6 +60,7 @@ func NewHub(onPresence func(userID string, isOnline bool, lastSeenAt *time.Time)
 		leaveRoom:  make(chan *ClientRoom),
 		broadcast:  make(chan *RoomMessage, 256),
 		userMsg:    make(chan *UserMessage, 256),
+		shutdown:   make(chan struct{}),
 		onPresence: onPresence,
 	}
 }
@@ -59,6 +68,10 @@ func NewHub(onPresence func(userID string, isOnline bool, lastSeenAt *time.Time)
 func (h *Hub) Run() {
 	for {
 		select {
+		case <-h.shutdown:
+			h.shutdownAll()
+			return
+
 		case client := <-h.register:
 			h.mu.Lock()
 			wasOnline := h.userIndex[client.userID] != nil && len(h.userIndex[client.userID]) > 0
@@ -68,8 +81,10 @@ func (h *Hub) Run() {
 			}
 			h.userIndex[client.userID][client] = true
 			nowOnline := len(h.userIndex[client.userID]) > 0
+			atomic.AddInt64(&h.totalConnections, 1)
+			atomic.AddInt64(&h.activeConnections, 1)
 			h.mu.Unlock()
-			log.Printf("[WS] client connected: user=%s total=%d", client.userID, len(h.clients))
+			log.Printf("[WS] client connected: user=%s total=%d", client.userID, h.ActiveConnections())
 
 			if !wasOnline && nowOnline && h.onPresence != nil {
 				h.onPresence(client.userID, true, nil)
@@ -79,6 +94,7 @@ func (h *Hub) Run() {
 			h.mu.Lock()
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
+				atomic.AddInt64(&h.activeConnections, -1)
 				if conns, ok := h.userIndex[client.userID]; ok {
 					delete(conns, client)
 					nowOnline := len(conns) > 0
@@ -98,10 +114,10 @@ func (h *Hub) Run() {
 						}
 					}
 				}
-				close(client.send)
+				client.Close()
 			}
 			h.mu.Unlock()
-			log.Printf("[WS] client disconnected: user=%s total=%d", client.userID, len(h.clients))
+			log.Printf("[WS] client disconnected: user=%s total=%d", client.userID, h.ActiveConnections())
 
 		case cr := <-h.joinRoom:
 			h.mu.Lock()
@@ -125,6 +141,7 @@ func (h *Hub) Run() {
 			h.mu.Unlock()
 
 		case msg := <-h.broadcast:
+			atomic.AddInt64(&h.totalMessages, 1)
 			h.mu.RLock()
 			room, ok := h.rooms[msg.RoomID]
 			if ok {
@@ -143,6 +160,7 @@ func (h *Hub) Run() {
 			h.mu.RUnlock()
 
 		case msg := <-h.userMsg:
+			atomic.AddInt64(&h.totalMessages, 1)
 			h.mu.RLock()
 			if conns, ok := h.userIndex[msg.UserID]; ok {
 				for client := range conns {
@@ -157,6 +175,42 @@ func (h *Hub) Run() {
 			h.mu.RUnlock()
 		}
 	}
+}
+
+func (h *Hub) shutdownAll() {
+	h.mu.Lock()
+	for client := range h.clients {
+		client.Close()
+	}
+	h.clients = nil
+	h.userIndex = nil
+	h.rooms = nil
+	h.mu.Unlock()
+	log.Println("[WS] Hub shutdown complete")
+}
+
+func (h *Hub) Shutdown() {
+	close(h.shutdown)
+}
+
+func (h *Hub) ActiveConnections() int64 {
+	return atomic.LoadInt64(&h.activeConnections)
+}
+
+func (h *Hub) TotalConnections() int64 {
+	return atomic.LoadInt64(&h.totalConnections)
+}
+
+func (h *Hub) TotalMessages() int64 {
+	return atomic.LoadInt64(&h.totalMessages)
+}
+
+func (h *Hub) TotalErrors() int64 {
+	return atomic.LoadInt64(&h.totalErrors)
+}
+
+func (h *Hub) IncrementErrors() {
+	atomic.AddInt64(&h.totalErrors, 1)
 }
 
 func (h *Hub) BroadcastToRoom(roomID string, payload []byte, excludeUserID string) {

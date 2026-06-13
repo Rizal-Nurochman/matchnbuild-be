@@ -2,6 +2,7 @@ package chat
 
 import (
 	"log"
+	"os"
 
 	"github.com/Rizal-Nurochman/matchnbuild/middlewares"
 	chatController "github.com/Rizal-Nurochman/matchnbuild/modules/chat/controller"
@@ -29,11 +30,13 @@ func RegisterRoutes(server *gin.RouterGroup, injector *do.Injector) {
 
 	userRepository := userRepo.NewUserRepository(db)
 
+	allowedOrigin := os.Getenv("WS_ALLOWED_ORIGIN")
+
 	hub := chatWs.NewHub(nil)
 	go hub.Run()
 	log.Println("[WS] Hub started")
 
-	wsHandler := chatWs.NewHandler(hub, chatSvc, userRepository, jwtService, db)
+	wsHandler := chatWs.NewHandler(hub, chatSvc, userRepository, jwtService, db, allowedOrigin)
 
 	chatRoutes := server.Group("/conversations")
 	{
