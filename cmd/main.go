@@ -6,6 +6,7 @@ import (
 
 	"github.com/Rizal-Nurochman/matchnbuild/middlewares"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/auth"
+	"github.com/Rizal-Nurochman/matchnbuild/modules/chat"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/design_item"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/designer"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/payment"
@@ -74,6 +75,7 @@ func main() {
 		// Register module routes
 		user.RegisterRoutes(v1, injector)
 		auth.RegisterRoutes(v1, injector)
+		chat.RegisterRoutes(v1, injector)
 		upload.RegisterRoutes(v1, injector)
 		project_request.RegisterRoutes(v1, injector)
 		quotation.RegisterRoutes(v1, injector)

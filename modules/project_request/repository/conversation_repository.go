@@ -10,6 +10,7 @@ import (
 type (
 	ConversationRepository interface {
 		Create(ctx context.Context, tx *gorm.DB, conversation entities.Conversation) (entities.Conversation, error)
+		GetByID(ctx context.Context, tx *gorm.DB, id string) (entities.Conversation, error)
 		GetByProjectRequestID(ctx context.Context, tx *gorm.DB, projectRequestID string) (entities.Conversation, error)
 	}
 
@@ -41,6 +42,19 @@ func (r *conversationRepository) GetByProjectRequestID(ctx context.Context, tx *
 
 	var conversation entities.Conversation
 	if err := tx.WithContext(ctx).Where("project_request_id = ?", projectRequestID).Take(&conversation).Error; err != nil {
+		return entities.Conversation{}, err
+	}
+
+	return conversation, nil
+}
+
+func (r *conversationRepository) GetByID(ctx context.Context, tx *gorm.DB, id string) (entities.Conversation, error) {
+	if tx == nil {
+		tx = r.db
+	}
+
+	var conversation entities.Conversation
+	if err := tx.WithContext(ctx).Where("id = ?", id).Take(&conversation).Error; err != nil {
 		return entities.Conversation{}, err
 	}
 
