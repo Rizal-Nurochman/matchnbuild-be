@@ -12,6 +12,7 @@ type (
 		Create(ctx context.Context, tx *gorm.DB, quotation entities.Quotation) (entities.Quotation, error)
 		GetByID(ctx context.Context, tx *gorm.DB, id string) (entities.Quotation, error)
 		GetByProjectRequestID(ctx context.Context, tx *gorm.DB, projectRequestID string) (entities.Quotation, error)
+		GetListByProjectRequestID(ctx context.Context, tx *gorm.DB, projectRequestID string) ([]entities.Quotation, error)
 		Update(ctx context.Context, tx *gorm.DB, quotation entities.Quotation) (entities.Quotation, error)
 	}
 
@@ -60,6 +61,19 @@ func (r *quotationRepository) GetByProjectRequestID(ctx context.Context, tx *gor
 	}
 
 	return quotation, nil
+}
+
+func (r *quotationRepository) GetListByProjectRequestID(ctx context.Context, tx *gorm.DB, projectRequestID string) ([]entities.Quotation, error) {
+	if tx == nil {
+		tx = r.db
+	}
+
+	var quotations []entities.Quotation
+	if err := tx.WithContext(ctx).Where("project_request_id = ?", projectRequestID).Find(&quotations).Error; err != nil {
+		return nil, err
+	}
+
+	return quotations, nil
 }
 
 func (r *quotationRepository) Update(ctx context.Context, tx *gorm.DB, quotation entities.Quotation) (entities.Quotation, error) {

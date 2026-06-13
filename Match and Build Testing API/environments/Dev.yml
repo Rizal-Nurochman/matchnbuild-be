@@ -3,7 +3,7 @@ variables:
   - name: base_url
     value: http://localhost:8888/api/v1
   - name: access_token
-    value: ""
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTZhOGJkYWItNjM3ZC00ZTc2LTllMDYtMzA2MzQ2NTcxZDU3Iiwicm9sZSI6ImNsaWVudCIsImlzcyI6IlRlbXBsYXRlIiwiZXhwIjoyMDk2MjcwMDUyLCJpYXQiOjE3ODA5MTAwNTJ9._d3w6hJCeUsMit2dlhpgMwCTe5y-U_rYeH8C6kdFed8
   - name: refresh_token
     value: ""
   - name: user_id
@@ -15,17 +15,17 @@ variables:
   - name: design_item_id
     value: ""
   - name: designer_id
-    value: ""
+    value: 61f5695f-fdfd-47de-af26-9eece28ee896
   - name: project_request_id
-    value: ""
+    value: 1f7c35af-61a5-41b6-a66f-7ff1eead2aad
   - name: quotation_id
     value: ""
   - name: order_id
-    value: ""
+    value: eaaa34ff-9b95-4a9a-980c-6746a71baf22
   - name: payment_id
     value: ""
   - name: midtrans_order_id
-    value: ""
+    value: 23b50d60-5ac4-4ab8-98cb-b49d517462be
   - name: snap_token
     value: ""
   - name: snap_redirect_url

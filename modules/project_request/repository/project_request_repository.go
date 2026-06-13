@@ -46,6 +46,7 @@ func (r *projectRequestRepository) GetByID(ctx context.Context, tx *gorm.DB, id 
 	if err := tx.WithContext(ctx).
 		Preload("Client").
 		Preload("Designer.User").
+		Preload("Quotations.Order").
 		Where("id = ?", id).Take(&projectRequest).Error; err != nil {
 		return entities.ProjectRequest{}, err
 	}
@@ -62,6 +63,7 @@ func (r *projectRequestRepository) GetByClientID(ctx context.Context, tx *gorm.D
 	if err := tx.WithContext(ctx).
 		Preload("Client").
 		Preload("Designer.User").
+		Preload("Quotations.Order").
 		Where("client_id = ?", clientID).Find(&projectRequests).Error; err != nil {
 		return nil, err
 	}
@@ -78,6 +80,7 @@ func (r *projectRequestRepository) GetByDesignerID(ctx context.Context, tx *gorm
 	if err := tx.WithContext(ctx).
 		Preload("Client").
 		Preload("Designer.User").
+		Preload("Quotations.Order").
 		Where("designer_id = ?", designerID).Find(&projectRequests).Error; err != nil {
 		return nil, err
 	}

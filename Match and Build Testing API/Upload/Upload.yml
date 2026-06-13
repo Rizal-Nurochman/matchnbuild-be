@@ -1,0 +1,32 @@
+info:
+  name: Upload
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{base_url}}/upload"
+  body:
+    type: multipart-form
+    data:
+      - name: file
+        type: file
+        value:
+          - C:\Users\vrd5n\Downloads\Atlanta-Series.webp
+      - name: folder
+        type: text
+        value: design-items
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTZhOGJkYWItNjM3ZC00ZTc2LTllMDYtMzA2MzQ2NTcxZDEwIiwicm9sZSI6ImRlc2lnbmVyIiwiaXNzIjoiVGVtcGxhdGUiLCJleHAiOjE3ODA1NDY2NTQsImlhdCI6MTc4MDU0NTc1NH0.KzHxUjs-AAPcnwcQ1BfUb6-zOIC3_yhjU-CwnYhic1k
+
+runtime:
+  variables:
+    - name: base_url
+      value: http://localhost:8888/api/v1
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
