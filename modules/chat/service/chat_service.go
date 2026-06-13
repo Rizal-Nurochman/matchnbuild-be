@@ -14,11 +14,13 @@ import (
 
 type ChatService interface {
 	GetConversations(ctx context.Context, userID string) ([]chatDto.ConversationResponse, error)
-	GetMessages(ctx context.Context, userID string, conversationID string, beforeID string, limit int) (chatDto.GetMessagesResponse, error)
+	GetMessages(ctx context.Context, userID string, conversationID string, beforeID string, afterID string, limit int) (chatDto.GetMessagesResponse, error)
 	SendMessage(ctx context.Context, userID string, conversationID string, req chatDto.SendMessageRequest) (chatDto.MessageResponse, error)
 	IsParticipant(userID string, conversationID string) (bool, error)
 	MarkAsRead(userID string, conversationID string, messageID string) error
 	SendMessageWS(userID string, conversationID string, req chatDto.SendMessageRequest) (chatDto.MessageResponse, error)
+	GetUnreadCount(userID string, conversationID string) (int64, error)
+	GetTotalUnreadCount(userID string) (int64, error)
 }
 
 type chatService struct {
@@ -75,7 +77,7 @@ func (s *chatService) GetConversations(ctx context.Context, userID string) ([]ch
 	return responses, nil
 }
 
-func (s *chatService) GetMessages(ctx context.Context, userID string, conversationID string, beforeID string, limit int) (chatDto.GetMessagesResponse, error) {
+func (s *chatService) GetMessages(ctx context.Context, userID string, conversationID string, beforeID string, afterID string, limit int) (chatDto.GetMessagesResponse, error) {
 	isParticipant, err := s.conversationParticipantRepo.IsParticipant(ctx, s.db, conversationID, userID)
 	if err != nil {
 		return chatDto.GetMessagesResponse{}, err
@@ -88,7 +90,7 @@ func (s *chatService) GetMessages(ctx context.Context, userID string, conversati
 		limit = 30
 	}
 
-	messages, err := s.messageRepo.GetByConversationID(ctx, s.db, conversationID, beforeID, limit+1)
+	messages, err := s.messageRepo.GetByConversationID(ctx, s.db, conversationID, beforeID, afterID, limit+1)
 	if err != nil {
 		return chatDto.GetMessagesResponse{}, err
 	}
@@ -161,6 +163,14 @@ func (s *chatService) MarkAsRead(userID string, conversationID string, messageID
 
 func (s *chatService) SendMessageWS(userID string, conversationID string, req chatDto.SendMessageRequest) (chatDto.MessageResponse, error) {
 	return s.SendMessage(context.Background(), userID, conversationID, req)
+}
+
+func (s *chatService) GetUnreadCount(userID string, conversationID string) (int64, error) {
+	return s.messageRepo.GetUnreadCount(context.Background(), s.db, conversationID, userID)
+}
+
+func (s *chatService) GetTotalUnreadCount(userID string) (int64, error) {
+	return s.messageRepo.GetTotalUnreadCount(context.Background(), s.db, userID)
 }
 
 func toMessageResponse(msg entities.Message) chatDto.MessageResponse {

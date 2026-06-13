@@ -37,6 +37,8 @@ func RegisterRoutes(server *gin.RouterGroup, injector *do.Injector) {
 		chatRoutes.GET("", middlewares.Authenticate(jwtService), chatCtrl.GetConversations)
 		chatRoutes.GET("/:id/messages", middlewares.Authenticate(jwtService), chatCtrl.GetMessages)
 		chatRoutes.POST("/:id/messages", middlewares.Authenticate(jwtService), chatCtrl.SendMessage)
+		chatRoutes.GET("/:id/unread-count", middlewares.Authenticate(jwtService), chatCtrl.GetUnreadCount)
+		chatRoutes.GET("/unread-count", middlewares.Authenticate(jwtService), chatCtrl.GetTotalUnreadCount)
 	}
 
 	server.GET("/ws", wsHandler.HandleWebSocket)

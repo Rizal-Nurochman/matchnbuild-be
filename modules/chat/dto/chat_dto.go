@@ -12,6 +12,8 @@ const (
 	MESSAGE_SUCCESS_GET_MESSAGES         = "success get messages"
 	MESSAGE_FAILED_SEND_MESSAGE         = "failed send message"
 	MESSAGE_SUCCESS_SEND_MESSAGE         = "success send message"
+	MESSAGE_FAILED_GET_UNREAD_COUNT     = "failed get unread count"
+	MESSAGE_SUCCESS_GET_UNREAD_COUNT     = "success get unread count"
 )
 
 var (
@@ -52,5 +54,14 @@ type (
 	GetMessagesResponse struct {
 		Messages []MessageResponse `json:"messages"`
 		HasMore  bool              `json:"has_more"`
+	}
+
+	UnreadCountResponse struct {
+		ConversationID string `json:"conversation_id"`
+		UnreadCount    int    `json:"unread_count"`
+	}
+
+	TotalUnreadCountResponse struct {
+		TotalUnreadCount int `json:"total_unread_count"`
 	}
 )

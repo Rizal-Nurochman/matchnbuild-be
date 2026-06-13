@@ -15,6 +15,8 @@ type (
 		GetConversations(ctx *gin.Context)
 		GetMessages(ctx *gin.Context)
 		SendMessage(ctx *gin.Context)
+		GetUnreadCount(ctx *gin.Context)
+		GetTotalUnreadCount(ctx *gin.Context)
 	}
 
 	chatController struct {
@@ -47,13 +49,14 @@ func (c *chatController) GetMessages(ctx *gin.Context) {
 	conversationID := ctx.Param("id")
 
 	beforeID := ctx.Query("before")
+	afterID := ctx.Query("after")
 	limitStr := ctx.DefaultQuery("limit", "30")
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil || limit <= 0 {
 		limit = 30
 	}
 
-	result, err := c.chatService.GetMessages(ctx.Request.Context(), userID, conversationID, beforeID, limit)
+	result, err := c.chatService.GetMessages(ctx.Request.Context(), userID, conversationID, beforeID, afterID, limit)
 	if err != nil {
 		statusCode := http.StatusBadRequest
 		if err == dto.ErrNotConversationParticipant {
@@ -92,4 +95,38 @@ func (c *chatController) SendMessage(ctx *gin.Context) {
 
 	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_SEND_MESSAGE, result)
 	ctx.JSON(http.StatusCreated, res)
+}
+
+func (c *chatController) GetUnreadCount(ctx *gin.Context) {
+	userID := ctx.MustGet("user_id").(string)
+	conversationID := ctx.Param("id")
+
+	count, err := c.chatService.GetUnreadCount(userID, conversationID)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_UNREAD_COUNT, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_UNREAD_COUNT, dto.UnreadCountResponse{
+		ConversationID: conversationID,
+		UnreadCount:    int(count),
+	})
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (c *chatController) GetTotalUnreadCount(ctx *gin.Context) {
+	userID := ctx.MustGet("user_id").(string)
+
+	count, err := c.chatService.GetTotalUnreadCount(userID)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_UNREAD_COUNT, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_UNREAD_COUNT, dto.TotalUnreadCountResponse{
+		TotalUnreadCount: int(count),
+	})
+	ctx.JSON(http.StatusOK, res)
 }
