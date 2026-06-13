@@ -1,15 +1,19 @@
 package websocket
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	chatDto "github.com/Rizal-Nurochman/matchnbuild/modules/chat/dto"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/chat/service"
+	"github.com/Rizal-Nurochman/matchnbuild/modules/user/repository"
 	authService "github.com/Rizal-Nurochman/matchnbuild/modules/auth/service"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"gorm.io/gorm"
 )
 
 var upgrader = websocket.Upgrader{
@@ -23,15 +27,22 @@ var upgrader = websocket.Upgrader{
 type Handler struct {
 	hub        *Hub
 	chatSvc    service.ChatService
+	userRepo   repository.UserRepository
 	jwtService authService.JWTService
+	db         *gorm.DB
 }
 
-func NewHandler(hub *Hub, chatSvc service.ChatService, jwtService authService.JWTService) *Handler {
-	return &Handler{
+func NewHandler(hub *Hub, chatSvc service.ChatService, userRepo repository.UserRepository, jwtService authService.JWTService, db *gorm.DB) *Handler {
+	h := &Handler{
 		hub:        hub,
 		chatSvc:    chatSvc,
+		userRepo:   userRepo,
 		jwtService: jwtService,
+		db:         db,
 	}
+
+	hub.SetOnPresence(h.handlePresenceChange)
+	return h
 }
 
 func (h *Handler) HandleWebSocket(ctx *gin.Context) {
@@ -205,4 +216,21 @@ func (h *Handler) JoinUserToRoom(conversationID string, userID string) bool {
 
 	h.hub.JoinUserToRoom(userID, conversationID)
 	return true
+}
+
+func (h *Handler) handlePresenceChange(userID string, isOnline bool, lastSeenAt *time.Time) {
+	ctx := context.Background()
+
+	if !isOnline && lastSeenAt != nil {
+		err := h.userRepo.UpdateLastSeenAt(ctx, h.db, userID, lastSeenAt)
+		if err != nil {
+			log.Printf("[WS] failed to update last_seen_at: %v", err)
+		}
+	}
+
+	h.hub.BroadcastToAllUsers(chatDto.EVENT_PRESENCE_CHANGED, chatDto.PresenceChangedData{
+		UserID:     userID,
+		IsOnline:   isOnline,
+		LastSeenAt: lastSeenAt,
+	})
 }

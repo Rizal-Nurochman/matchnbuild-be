@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"sync"
+	"time"
 )
 
 type Hub struct {
@@ -17,6 +18,11 @@ type Hub struct {
 	broadcast  chan *RoomMessage
 	userMsg    chan *UserMessage
 	mu         sync.RWMutex
+	onPresence func(userID string, isOnline bool, lastSeenAt *time.Time)
+}
+
+func (h *Hub) SetOnPresence(fn func(userID string, isOnline bool, lastSeenAt *time.Time)) {
+	h.onPresence = fn
 }
 
 type ClientRoom struct {
@@ -35,7 +41,7 @@ type UserMessage struct {
 	Payload []byte
 }
 
-func NewHub() *Hub {
+func NewHub(onPresence func(userID string, isOnline bool, lastSeenAt *time.Time)) *Hub {
 	return &Hub{
 		clients:    make(map[*Client]bool),
 		userIndex:  make(map[string]map[*Client]bool),
@@ -46,6 +52,7 @@ func NewHub() *Hub {
 		leaveRoom:  make(chan *ClientRoom),
 		broadcast:  make(chan *RoomMessage, 256),
 		userMsg:    make(chan *UserMessage, 256),
+		onPresence: onPresence,
 	}
 }
 
@@ -54,13 +61,19 @@ func (h *Hub) Run() {
 		select {
 		case client := <-h.register:
 			h.mu.Lock()
+			wasOnline := h.userIndex[client.userID] != nil && len(h.userIndex[client.userID]) > 0
 			h.clients[client] = true
 			if h.userIndex[client.userID] == nil {
 				h.userIndex[client.userID] = make(map[*Client]bool)
 			}
 			h.userIndex[client.userID][client] = true
+			nowOnline := len(h.userIndex[client.userID]) > 0
 			h.mu.Unlock()
 			log.Printf("[WS] client connected: user=%s total=%d", client.userID, len(h.clients))
+
+			if !wasOnline && nowOnline && h.onPresence != nil {
+				h.onPresence(client.userID, true, nil)
+			}
 
 		case client := <-h.unregister:
 			h.mu.Lock()
@@ -68,8 +81,13 @@ func (h *Hub) Run() {
 				delete(h.clients, client)
 				if conns, ok := h.userIndex[client.userID]; ok {
 					delete(conns, client)
+					nowOnline := len(conns) > 0
 					if len(conns) == 0 {
 						delete(h.userIndex, client.userID)
+					}
+					if !nowOnline && h.onPresence != nil {
+						now := time.Now()
+						h.onPresence(client.userID, false, &now)
 					}
 				}
 				for roomID := range client.rooms {
@@ -201,4 +219,26 @@ func (h *Hub) JoinUserToRoom(userID string, roomID string) {
 			RoomID: roomID,
 		}
 	}
+}
+
+func (h *Hub) BroadcastToAllUsers(eventType string, data interface{}) {
+	resp := map[string]interface{}{
+		"type": eventType,
+		"data": data,
+	}
+	payload, err := json.Marshal(resp)
+	if err != nil {
+		return
+	}
+
+	h.mu.RLock()
+	for _, conns := range h.userIndex {
+		for client := range conns {
+			select {
+			case client.send <- payload:
+			default:
+			}
+		}
+	}
+	h.mu.RUnlock()
 }

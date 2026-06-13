@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/Rizal-Nurochman/matchnbuild/database/entities"
 	"gorm.io/gorm"
@@ -15,6 +16,7 @@ type (
 		CheckEmail(ctx context.Context, tx *gorm.DB, email string) (entities.User, bool, error)
 		Update(ctx context.Context, tx *gorm.DB, user entities.User) (entities.User, error)
 		Delete(ctx context.Context, tx *gorm.DB, userId string) error
+		UpdateLastSeenAt(ctx context.Context, tx *gorm.DB, userId string, lastSeenAt *time.Time) error
 	}
 
 	userRepository struct {
@@ -97,6 +99,21 @@ func (r *userRepository) Delete(ctx context.Context, tx *gorm.DB, userId string)
 	}
 
 	if err := tx.WithContext(ctx).Delete(&entities.User{}, "id = ?", userId).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepository) UpdateLastSeenAt(ctx context.Context, tx *gorm.DB, userId string, lastSeenAt *time.Time) error {
+	if tx == nil {
+		tx = r.db
+	}
+
+	if err := tx.WithContext(ctx).
+		Model(&entities.User{}).
+		Where("id = ?", userId).
+		Update("last_seen_at", lastSeenAt).Error; err != nil {
 		return err
 	}
 

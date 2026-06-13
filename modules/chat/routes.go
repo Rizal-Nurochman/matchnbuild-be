@@ -9,6 +9,7 @@ import (
 	chatService "github.com/Rizal-Nurochman/matchnbuild/modules/chat/service"
 	chatWs "github.com/Rizal-Nurochman/matchnbuild/modules/chat/websocket"
 	authService "github.com/Rizal-Nurochman/matchnbuild/modules/auth/service"
+	userRepo "github.com/Rizal-Nurochman/matchnbuild/modules/user/repository"
 	prRepo "github.com/Rizal-Nurochman/matchnbuild/modules/project_request/repository"
 	"github.com/Rizal-Nurochman/matchnbuild/pkg/constants"
 	"github.com/gin-gonic/gin"
@@ -26,11 +27,13 @@ func RegisterRoutes(server *gin.RouterGroup, injector *do.Injector) {
 	chatSvc := chatService.NewChatService(messageRepo, conversationParticipantRepo, conversationRepo, db)
 	chatCtrl := chatController.NewChatController(chatSvc)
 
-	hub := chatWs.NewHub()
+	userRepository := userRepo.NewUserRepository(db)
+
+	hub := chatWs.NewHub(nil)
 	go hub.Run()
 	log.Println("[WS] Hub started")
 
-	wsHandler := chatWs.NewHandler(hub, chatSvc, jwtService)
+	wsHandler := chatWs.NewHandler(hub, chatSvc, userRepository, jwtService, db)
 
 	chatRoutes := server.Group("/conversations")
 	{

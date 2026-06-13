@@ -16,6 +16,7 @@ type User struct {
 	IsVerified         bool       `gorm:"default:false;not null"`
 	VerificationCode   string     `gorm:"type:varchar(6)"`
 	VerificationExpiry *time.Time `gorm:"type:timestamp with time zone"`
+	LastSeenAt         *time.Time `gorm:"type:timestamp with time zone"`
 
 	Preference 			*UserPreference	 `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	DesignerProfile *DesignerProfile `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
