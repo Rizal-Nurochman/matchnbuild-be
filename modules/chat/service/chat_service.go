@@ -16,6 +16,9 @@ type ChatService interface {
 	GetConversations(ctx context.Context, userID string) ([]chatDto.ConversationResponse, error)
 	GetMessages(ctx context.Context, userID string, conversationID string, beforeID string, limit int) (chatDto.GetMessagesResponse, error)
 	SendMessage(ctx context.Context, userID string, conversationID string, req chatDto.SendMessageRequest) (chatDto.MessageResponse, error)
+	IsParticipant(userID string, conversationID string) (bool, error)
+	MarkAsRead(userID string, conversationID string, messageID string) error
+	SendMessageWS(userID string, conversationID string, req chatDto.SendMessageRequest) (chatDto.MessageResponse, error)
 }
 
 type chatService struct {
@@ -146,6 +149,18 @@ func (s *chatService) SendMessage(ctx context.Context, userID string, conversati
 	}
 
 	return toMessageResponse(savedMessage), nil
+}
+
+func (s *chatService) IsParticipant(userID string, conversationID string) (bool, error) {
+	return s.conversationParticipantRepo.IsParticipant(context.Background(), s.db, conversationID, userID)
+}
+
+func (s *chatService) MarkAsRead(userID string, conversationID string, messageID string) error {
+	return s.conversationParticipantRepo.UpdateLastReadMessage(context.Background(), s.db, conversationID, userID, messageID)
+}
+
+func (s *chatService) SendMessageWS(userID string, conversationID string, req chatDto.SendMessageRequest) (chatDto.MessageResponse, error) {
+	return s.SendMessage(context.Background(), userID, conversationID, req)
 }
 
 func toMessageResponse(msg entities.Message) chatDto.MessageResponse {

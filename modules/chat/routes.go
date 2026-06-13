@@ -1,10 +1,13 @@
 package chat
 
 import (
+	"log"
+
 	"github.com/Rizal-Nurochman/matchnbuild/middlewares"
 	chatController "github.com/Rizal-Nurochman/matchnbuild/modules/chat/controller"
 	chatRepo "github.com/Rizal-Nurochman/matchnbuild/modules/chat/repository"
 	chatService "github.com/Rizal-Nurochman/matchnbuild/modules/chat/service"
+	chatWs "github.com/Rizal-Nurochman/matchnbuild/modules/chat/websocket"
 	authService "github.com/Rizal-Nurochman/matchnbuild/modules/auth/service"
 	prRepo "github.com/Rizal-Nurochman/matchnbuild/modules/project_request/repository"
 	"github.com/Rizal-Nurochman/matchnbuild/pkg/constants"
@@ -23,10 +26,18 @@ func RegisterRoutes(server *gin.RouterGroup, injector *do.Injector) {
 	chatSvc := chatService.NewChatService(messageRepo, conversationParticipantRepo, conversationRepo, db)
 	chatCtrl := chatController.NewChatController(chatSvc)
 
+	hub := chatWs.NewHub()
+	go hub.Run()
+	log.Println("[WS] Hub started")
+
+	wsHandler := chatWs.NewHandler(hub, chatSvc, jwtService)
+
 	chatRoutes := server.Group("/conversations")
 	{
 		chatRoutes.GET("", middlewares.Authenticate(jwtService), chatCtrl.GetConversations)
 		chatRoutes.GET("/:id/messages", middlewares.Authenticate(jwtService), chatCtrl.GetMessages)
 		chatRoutes.POST("/:id/messages", middlewares.Authenticate(jwtService), chatCtrl.SendMessage)
 	}
+
+	server.GET("/ws", wsHandler.HandleWebSocket)
 }
