@@ -66,6 +66,9 @@ func (s *projectRequestService) Create(ctx context.Context, req dto.ProjectReque
 	}
 
 	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return dto.ProjectRequestResponse{}, tx.Error
+	}
 
 	projectRequest := entities.ProjectRequest{
 		ID:               uuid.New(),
@@ -109,8 +112,7 @@ func (s *projectRequestService) Create(ctx context.Context, req dto.ProjectReque
 		},
 	}
 
-	if err := s.conversationParticipantRepo.CreateMany(ctx, tx, participants);
-	err != nil {
+	if err := s.conversationParticipantRepo.CreateMany(ctx, tx, participants); err != nil {
 		tx.Rollback()
 		return dto.ProjectRequestResponse{}, err
 	}

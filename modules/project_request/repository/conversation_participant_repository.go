@@ -4,12 +4,16 @@ import (
 	"context"
 
 	"github.com/Rizal-Nurochman/matchnbuild/database/entities"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type (
 	ConversationParticipantRepository interface {
 		CreateMany(ctx context.Context, tx *gorm.DB, participants []entities.ConversationParticipant) error
+		IsParticipant(ctx context.Context, tx *gorm.DB, conversationID string, userID string) (bool, error)
+		GetByUserID(ctx context.Context, tx *gorm.DB, userID string) ([]entities.ConversationParticipant, error)
+		UpdateLastReadMessage(ctx context.Context, tx *gorm.DB, conversationID string, userID string, messageID string) error
 	}
 
 	conversationParticipantRepository struct {
@@ -28,6 +32,58 @@ func (r *conversationParticipantRepository) CreateMany(ctx context.Context, tx *
 
 	err := tx.WithContext(ctx).Create(&participants).Error
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *conversationParticipantRepository) IsParticipant(ctx context.Context, tx *gorm.DB, conversationID string, userID string) (bool, error) {
+	if tx == nil {
+		tx = r.db
+	}
+	var count int64
+
+	if err := tx.WithContext(ctx).
+		Model(&entities.ConversationParticipant{}).
+		Where("conversation_id = ? AND user_id = ?", conversationID, userID).
+		Count(&count).
+		Error; err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func (r *conversationParticipantRepository) GetByUserID(ctx context.Context, tx *gorm.DB, userID string) ([]entities.ConversationParticipant, error) {
+	if tx == nil {
+		tx = r.db
+	}
+
+	var participants []entities.ConversationParticipant
+	if err := tx.WithContext(ctx).
+		Where("user_id = ?", userID).
+		Find(&participants).Error; err != nil {
+		return nil, err
+	}
+
+	return participants, nil
+}
+
+func (r *conversationParticipantRepository) UpdateLastReadMessage(ctx context.Context, tx *gorm.DB, conversationID string, userID string, messageID string) error {
+	if tx == nil {
+		tx = r.db
+	}
+
+	var messageIDPtr *uuid.UUID
+	if parsed, err := uuid.Parse(messageID); err == nil {
+		messageIDPtr = &parsed
+	}
+
+	if err := tx.WithContext(ctx).
+		Model(&entities.ConversationParticipant{}).
+		Where("conversation_id = ? AND user_id = ?", conversationID, userID).
+		Update("last_read_message_id", messageIDPtr).Error; err != nil {
 		return err
 	}
 
