@@ -63,8 +63,6 @@ func run(server *gin.Engine, injector *do.Injector) {
 		Handler: server,
 	}
 
-	// Run the HTTP server in the background so we can listen for OS signals and
-	// shut everything down gracefully.
 	go func() {
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("error running server: %v", err)
@@ -76,8 +74,6 @@ func run(server *gin.Engine, injector *do.Injector) {
 	<-quit
 	log.Println("shutting down server...")
 
-	// Stop the websocket hub first so all client connections are closed and
-	// presence/last_seen is flushed before the process exits.
 	if hub, err := do.InvokeNamed[*chatWs.Hub](injector, constants.ChatHub); err == nil {
 		hub.Shutdown()
 		log.Println("[WS] Hub stopped")

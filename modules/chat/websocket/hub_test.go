@@ -6,9 +6,6 @@ import (
 	"time"
 )
 
-// newTestClient builds a Client without a real websocket connection. The hub
-// never touches Client.conn (only Client.send), so a nil conn is safe for
-// hub-level concurrency tests.
 func newTestClient(hub *Hub, userID string, rooms []string) *Client {
 	return &Client{
 		hub:          hub,
@@ -20,18 +17,12 @@ func newTestClient(hub *Hub, userID string, rooms []string) *Client {
 	}
 }
 
-// drain keeps reading a client's send channel until it is closed so buffered
-// sends never block the hub. Exits cleanly when Close() closes the channel.
 func drain(c *Client, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for range c.send {
 	}
 }
 
-// TestHubConcurrency hammers the hub with concurrent register/unregister,
-// room broadcasts, user messages, presence-scoped broadcasts and read-only
-// queries. Run with -race to catch concurrent map access or send-on-closed
-// channel panics (the C2/C3 regressions this guards against).
 func TestHubConcurrency(t *testing.T) {
 	var presenceMu sync.Mutex
 	presenceCalls := 0
@@ -56,8 +47,6 @@ func TestHubConcurrency(t *testing.T) {
 
 	var wg sync.WaitGroup
 
-	// Connection churn: each worker repeatedly connects and disconnects a client
-	// that belongs to a couple of rooms.
 	for w := 0; w < workers; w++ {
 		wg.Add(1)
 		go func(w int) {
@@ -81,7 +70,6 @@ func TestHubConcurrency(t *testing.T) {
 		}(w)
 	}
 
-	// Concurrent readers that take RLock while the Run loop mutates maps under Lock.
 	for r := 0; r < workers/2; r++ {
 		wg.Add(1)
 		go func(r int) {
@@ -113,25 +101,18 @@ func TestHubConcurrency(t *testing.T) {
 	}
 }
 
-// TestHubSlowConsumerEviction verifies that a client whose send buffer is full
-// is evicted during a broadcast without panicking and without leaking from the
-// hub indexes.
 func TestHubSlowConsumerEviction(t *testing.T) {
 	hub := NewHub(nil)
 	go hub.Run()
 	defer hub.Shutdown()
 
-	// A client we never drain: its send buffer will fill up and it should be
-	// evicted on the next broadcast once the buffer is exhausted.
 	slow := newTestClient(hub, "slow-user", []string{"room-X"})
 	hub.register <- slow
 
-	// Fill the send buffer beyond capacity via repeated room broadcasts.
 	for i := 0; i < sendBufferSize+50; i++ {
 		hub.BroadcastToRoomExcept("room-X", "message.created", map[string]int{"i": i}, "")
 	}
 
-	// Give the Run loop time to process the broadcast backlog and evict.
 	deadline := time.Now().Add(5 * time.Second)
 	for time.Now().Before(deadline) {
 		if hub.ActiveConnections() == 0 {

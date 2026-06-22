@@ -18,37 +18,53 @@ import (
 )
 
 type Handler struct {
-	hub           *Hub
-	chatSvc       service.ChatService
-	userRepo      repository.UserRepository
-	jwtService    authService.JWTService
-	db            *gorm.DB
-	allowedOrigin string
+	hub            *Hub
+	chatSvc        service.ChatService
+	userRepo       repository.UserRepository
+	jwtService     authService.JWTService
+	db             *gorm.DB
+	allowedOrigins []string
+	isProduction   bool
 }
 
-func NewHandler(hub *Hub, chatSvc service.ChatService, userRepo repository.UserRepository, jwtService authService.JWTService, db *gorm.DB, allowedOrigin string) *Handler {
+func NewHandler(hub *Hub, chatSvc service.ChatService, userRepo repository.UserRepository, jwtService authService.JWTService, db *gorm.DB, allowedOrigin string, isProduction bool) *Handler {
 	h := &Handler{
-		hub:           hub,
-		chatSvc:       chatSvc,
-		userRepo:      userRepo,
-		jwtService:    jwtService,
-		db:            db,
-		allowedOrigin: allowedOrigin,
+		hub:            hub,
+		chatSvc:        chatSvc,
+		userRepo:       userRepo,
+		jwtService:     jwtService,
+		db:             db,
+		allowedOrigins: parseOrigins(allowedOrigin),
+		isProduction:   isProduction,
 	}
 
 	hub.SetOnPresence(h.handlePresenceChange)
 	return h
 }
 
+func parseOrigins(raw string) []string {
+	if raw == "" {
+		return nil
+	}
+	parts := strings.Split(raw, ",")
+	origins := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if p = strings.TrimSpace(p); p != "" {
+			origins = append(origins, p)
+		}
+	}
+	return origins
+}
+
 func (h *Handler) HandleWebSocket(ctx *gin.Context) {
 	origin := ctx.Request.Header.Get("Origin")
-	if h.allowedOrigin != "" && !h.isOriginAllowed(origin) {
+	if !h.isOriginAllowed(origin) {
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "origin not allowed"})
 		h.hub.IncrementErrors()
 		return
 	}
 
-	token := ctx.Query("token")
+	token := h.extractToken(ctx)
 	if token == "" {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "token required"})
 		h.hub.IncrementErrors()
@@ -70,7 +86,15 @@ func (h *Handler) HandleWebSocket(ctx *gin.Context) {
 		},
 	}
 
-	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
+	var respHeader http.Header
+	if proto := ctx.GetHeader("Sec-WebSocket-Protocol"); proto != "" {
+		parts := strings.Split(proto, ",")
+		if len(parts) == 2 && strings.TrimSpace(parts[0]) == "bearer" {
+			respHeader = http.Header{"Sec-WebSocket-Protocol": []string{"bearer"}}
+		}
+	}
+
+	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, respHeader)
 	if err != nil {
 		log.Printf("[WS] upgrade failed: %v", err)
 		h.hub.IncrementErrors()
@@ -79,8 +103,6 @@ func (h *Handler) HandleWebSocket(ctx *gin.Context) {
 
 	client := NewClient(h.hub, conn, userID)
 
-	// Resolve conversations the user participates in so the hub can auto-join
-	// their rooms on register. Without this, room broadcasts never reach peers.
 	if convs, cErr := h.chatSvc.GetConversations(ctx.Request.Context(), userID); cErr == nil {
 		roomIDs := make([]string, 0, len(convs))
 		for _, c := range convs {
@@ -98,10 +120,35 @@ func (h *Handler) HandleWebSocket(ctx *gin.Context) {
 }
 
 func (h *Handler) isOriginAllowed(origin string) bool {
-	if h.allowedOrigin == "" {
+	if origin == "" {
 		return true
 	}
-	return strings.HasPrefix(origin, h.allowedOrigin)
+	if len(h.allowedOrigins) == 0 {
+		return !h.isProduction
+	}
+	for _, allowed := range h.allowedOrigins {
+		if origin == allowed {
+			return true
+		}
+	}
+	return false
+}
+
+func (h *Handler) extractToken(ctx *gin.Context) string {
+	if auth := ctx.GetHeader("Authorization"); auth != "" {
+		if after, ok := strings.CutPrefix(auth, "Bearer "); ok {
+			return strings.TrimSpace(after)
+		}
+	}
+
+	if proto := ctx.GetHeader("Sec-WebSocket-Protocol"); proto != "" {
+		parts := strings.Split(proto, ",")
+		if len(parts) == 2 && strings.TrimSpace(parts[0]) == "bearer" {
+			return strings.TrimSpace(parts[1])
+		}
+	}
+
+	return ctx.Query("token")
 }
 
 func (h *Handler) handleEvent(client *Client, msg IncomingMessage) {
@@ -170,9 +217,6 @@ func (h *Handler) handleMessageSend(client *Client, msg IncomingMessage) {
 		CreatedAt:       resp.CreatedAt,
 	}
 
-	// ACK back to the sender (carries request_id so the client can reconcile its
-	// optimistic message). Fan-out to other participants is handled inside the
-	// service's SendMessage so REST and WS share one broadcast path.
 	ackPayload, _ := json.Marshal(map[string]interface{}{
 		"type":       chatDto.EVENT_MESSAGE_CREATED,
 		"data":       createdData,
@@ -289,8 +333,6 @@ func (h *Handler) handlePresenceChange(userID string, isOnline bool, lastSeenAt 
 		}
 	}
 
-	// Scope presence to the user's conversation peers only, instead of a global
-	// fan-out to every connection. Avoids O(N) broadcast storms at scale.
 	h.hub.BroadcastToRooms(roomIDs, chatDto.EVENT_PRESENCE_CHANGED, chatDto.PresenceChangedData{
 		UserID:     userID,
 		IsOnline:   isOnline,

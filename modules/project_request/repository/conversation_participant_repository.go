@@ -75,15 +75,20 @@ func (r *conversationParticipantRepository) UpdateLastReadMessage(ctx context.Co
 		tx = r.db
 	}
 
-	var messageIDPtr *uuid.UUID
-	if parsed, err := uuid.Parse(messageID); err == nil {
-		messageIDPtr = &parsed
+	parsed, err := uuid.Parse(messageID)
+	if err != nil {
+		return err
 	}
 
 	if err := tx.WithContext(ctx).
 		Model(&entities.ConversationParticipant{}).
 		Where("conversation_id = ? AND user_id = ?", conversationID, userID).
-		Update("last_read_message_id", messageIDPtr).Error; err != nil {
+		Where(`(
+			last_read_message_id IS NULL
+			OR (SELECT created_at FROM messages WHERE id = ?) >
+			   (SELECT created_at FROM messages WHERE id = last_read_message_id)
+		)`, parsed).
+		Update("last_read_message_id", parsed).Error; err != nil {
 		return err
 	}
 

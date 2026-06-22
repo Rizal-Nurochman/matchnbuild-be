@@ -31,19 +31,17 @@ func RegisterRoutes(server *gin.RouterGroup, injector *do.Injector) {
 	userRepository := userRepo.NewUserRepository(db)
 
 	allowedOrigin := os.Getenv("WS_ALLOWED_ORIGIN")
+	isProduction := os.Getenv("APP_ENV") == constants.ENUM_RUN_PRODUCTION
 
 	hub := chatWs.NewHub(nil)
 	go hub.Run()
 	log.Println("[WS] Hub started")
 
-	// Register the hub in the DI container so its lifecycle is managed centrally
-	// (graceful shutdown on server stop) and other modules can reach it.
 	do.ProvideNamedValue(injector, constants.ChatHub, hub)
 
-	// Let the service broadcast created messages so REST and WS share one path.
 	chatSvc.SetBroadcaster(hub)
 
-	wsHandler := chatWs.NewHandler(hub, chatSvc, userRepository, jwtService, db, allowedOrigin)
+	wsHandler := chatWs.NewHandler(hub, chatSvc, userRepository, jwtService, db, allowedOrigin, isProduction)
 
 	chatRoutes := server.Group("/conversations")
 	{

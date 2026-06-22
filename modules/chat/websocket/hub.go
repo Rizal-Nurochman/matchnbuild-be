@@ -33,13 +33,10 @@ func (h *Hub) SetOnPresence(fn func(userID string, isOnline bool, lastSeenAt *ti
 	h.onPresence = fn
 }
 
-// offlineEvent carries the data needed to emit a scoped presence update for a
-// user that went offline, including the rooms they were a member of.
 type offlineEvent struct {
 	userID  string
 	roomIDs []string
 }
-
 type ClientRoom struct {
 	Client *Client
 	RoomID string
@@ -88,7 +85,6 @@ func (h *Hub) Run() {
 			}
 			h.userIndex[client.userID][client] = true
 			nowOnline := len(h.userIndex[client.userID]) > 0
-			// Auto-join pre-resolved conversation rooms (race-free: done inside Run goroutine).
 			roomIDs := make([]string, 0, len(client.pendingRooms))
 			for _, roomID := range client.pendingRooms {
 				if h.rooms[roomID] == nil {
@@ -177,10 +173,6 @@ func (h *Hub) Run() {
 	}
 }
 
-// removeClientLocked removes a client from all hub indexes and closes it.
-// It must be called with h.mu held for writing. The returned offlineEvent has a
-// non-empty userID only if the user transitioned from online to offline, in
-// which case roomIDs lists the rooms that client was a member of.
 func (h *Hub) removeClientLocked(client *Client) offlineEvent {
 	if _, ok := h.clients[client]; !ok {
 		return offlineEvent{}
@@ -215,8 +207,6 @@ func (h *Hub) removeClientLocked(client *Client) offlineEvent {
 	return offlineEvent{userID: client.userID, roomIDs: roomIDs}
 }
 
-// removeClientsLocked removes multiple clients and returns the offline events
-// for users that transitioned to offline. Must be called with h.mu held for writing.
 func (h *Hub) removeClientsLocked(clients []*Client) []offlineEvent {
 	var offline []offlineEvent
 	for _, c := range clients {
@@ -227,8 +217,6 @@ func (h *Hub) removeClientsLocked(clients []*Client) []offlineEvent {
 	return offline
 }
 
-// notifyOffline fires the presence callback for users that went offline.
-// It must be called WITHOUT holding h.mu to avoid re-entrant lock deadlocks.
 func (h *Hub) notifyOffline(events []offlineEvent) {
 	if h.onPresence == nil {
 		return
@@ -305,11 +293,6 @@ func (h *Hub) BroadcastToRoomExcept(roomID string, eventType string, data interf
 	h.BroadcastToRoom(roomID, payload, excludeUserID)
 }
 
-// BroadcastToRooms sends an event to every client across the given rooms,
-// deduping clients that belong to more than one of them and skipping the
-// excluded user. Used to scope presence updates to a user's conversation peers
-// instead of a global fan-out. Reads maps under RLock only; sends are
-// non-blocking and never mutate maps, so this is safe alongside the Run loop.
 func (h *Hub) BroadcastToRooms(roomIDs []string, eventType string, data interface{}, excludeUserID string) {
 	if len(roomIDs) == 0 {
 		return

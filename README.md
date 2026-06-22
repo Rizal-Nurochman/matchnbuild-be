@@ -1,241 +1,252 @@
-# Golang Gin Clean Starter
+# Match and Build — Backend API
 
-You can join in the development (Open Source). **Let's Go!!!**
+Backend service for **Match and Build**, a platform that connects clients with designers. Clients post project requests, designers send quotations, payments are processed through Midtrans, and both sides communicate over a real-time chat.
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/Rizal-Nurochman/matchnbuild)](https://goreportcard.com/report/github.com/Rizal-Nurochman/matchnbuild) [![Go Reference](https://pkg.go.dev/badge/github.com/Rizal-Nurochman/matchnbuild.svg)](https://pkg.go.dev/github.com/Rizal-Nurochman/matchnbuild) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Release](https://img.shields.io/badge/release-v2.2.0-green.svg)](https://github.com/Rizal-Nurochman/matchnbuild/releases) <img align="right" width="200" height="200" alt="Go Gin Clean Architecture" src="https://github.com/user-attachments/assets/b7e2f353-bb6b-4ef1-88e9-6ab9bf2b8327" />
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Go Version](https://img.shields.io/badge/Go-%3E%3D%201.23-blue.svg)](https://golang.org/) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-%3E%3D%2015.0-blue.svg)](https://www.postgresql.org/) [![Gin](https://img.shields.io/badge/Gin-Web%20Framework-red.svg)](https://gin-gonic.com/) [![GORM](https://img.shields.io/badge/GORM-ORM-green.svg)](https://gorm.io/)
 
-[![Go Version](https://img.shields.io/badge/Go-%3E%3D%201.20-blue.svg)](https://golang.org/) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-%3E%3D%2015.0-blue.svg)](https://www.postgresql.org/) [![Docker](https://img.shields.io/badge/Docker-Supported-blue.svg)](https://www.docker.com/) [![Gin](https://img.shields.io/badge/Gin-Web%20Framework-red.svg)](https://gin-gonic.com/) [![GORM](https://img.shields.io/badge/GORM-ORM-green.svg)](https://gorm.io/)
+## Overview
 
-## Introduction 👋
-> This project implements **Clean Architecture** principles with the Controller–Service–Repository pattern. This approach emphasizes clear separation of responsibilities across different layers in Golang applications. The architecture helps keep the codebase clean, testable, and scalable by dividing application logic into distinct modules with well-defined boundaries.
+The project follows **Clean Architecture** with a Controller–Service–Repository layering. Each feature lives in its own module under `modules/`, wired together through dependency injection (`samber/do`).
 
-<img width="1485" height="610" alt="Image" src="https://github.com/user-attachments/assets/918adf6d-9dc4-47fa-b9a6-3a10ca1e5242" />
+### Tech Stack
+- **Language:** Go 1.23 (toolchain 1.24)
+- **Web framework:** Gin
+- **ORM:** GORM (PostgreSQL, with SQLite support for tests)
+- **Dependency injection:** `samber/do`
+- **Auth:** JWT (`golang-jwt/jwt`)
+- **Real-time:** WebSocket (`gorilla/websocket`)
+- **Payments:** Midtrans Snap
+- **Media:** ImageKit
+- **Validation:** `go-playground/validator`
 
-## Quick Start 🚀
+## Modules
+
+| Module | Responsibility |
+| --- | --- |
+| `auth` | Registration, login, JWT issuing, refresh tokens |
+| `user` | User accounts and profiles |
+| `user_preferences` | Per-user preference data used for recommendations |
+| `designer` | Designer profiles |
+| `design_item` | Design catalog items |
+| `recommendation` | Design item recommendations |
+| `project_request` | Client project requests and conversations |
+| `quotation` | Designer quotations and resulting orders |
+| `payment` | Midtrans Snap tokens, payment status, webhook handling |
+| `chat` | Conversations, message history, and real-time chat over WebSocket |
+| `upload` | File/image uploads via ImageKit |
+
+## Project Structure
+
+```text
+cmd/            Application entrypoint (main.go)
+config/         Database and third-party configuration
+database/       Entities, migrations, seeders, migration manager
+middlewares/    Auth, CORS, and other Gin middleware
+modules/        Feature modules (controller / service / repository / dto)
+pkg/            Shared helpers, constants, utils
+providers/      Dependency injection wiring
+script/         CLI scripts runnable via flags
+```
+
+## Quick Start
 
 ### Prerequisites
-- Go Version `>= go 1.20`
-- PostgreSQL Version `>= version 15.0`
+- Go `>= 1.23`
+- PostgreSQL `>= 15.0`
+- The `uuid-ossp` Postgres extension (entities use `uuid_generate_v4()`)
 
 ### Installation
-1. Clone the repository or **Use This Template**
+1. Clone the repository:
    ```bash
    git clone https://github.com/Rizal-Nurochman/matchnbuild.git
+   cd matchnbuild
    ```
-2. Navigate to the project directory:
+2. Copy the example environment file and configure it:
    ```bash
-   cd go-gin-clean-starter
-   ```
-3. Copy the example environment file and configure it:
-   ```bash 
    cp .env.example .env
    ```
-4. Install dependencies:
+3. Install dependencies:
    ```bash
    make dep
    ```
 
-## Running the Application 🏃‍♂️
+## Running the Application
 
-There are two ways to run the application:
-
-### Option 1: With Docker
-1. Configure `.env` with your PostgreSQL credentials:
+### Option 1: Without Docker
+1. Configure `.env` with your PostgreSQL credentials (see [Environment Variables](#environment-variables)).
+2. Run migrations and start the server:
    ```bash
-   DB_HOST=localhost
-   DB_USER=postgres
-   DB_PASS=your_password
-   DB_NAME=your_database
-   DB_PORT=5432
+   make migrate       # Run migrations
+   make seed          # Run seeders (optional)
+   make migrate-seed  # Migrations + seeders in one step
+   make run           # Start the application
    ```
-2. Build and start Docker containers:
+   The server listens on `GOLANG_PORT` (default `8888`).
+
+### Option 2: With Docker
+1. Configure `.env` with your PostgreSQL credentials.
+2. Build and start the containers:
    ```bash
    make init-docker
    ```
-3. Run migrations and seeders:
+3. Run migrations and seeders inside the container:
    ```bash
    make migrate-seed-docker
    ```
-4. The application will be available at `http://localhost:<port>`
 
-**Docker Migration Commands:**
-```bash
-make migrate-docker                                 # Run migrations in Docker
-make migrate-status-docker                          # Show migration status in Docker
-make migrate-rollback-docker                        # Rollback last batch in Docker
-make migrate-rollback-batch-docker batch=<number>   # Rollback batch in Docker
-make migrate-rollback-all-docker                    # Rollback all in Docker
-make migrate-create-docker name=<name>              # Create migration in Docker
-```
+### Graceful Shutdown
+The server runs an HTTP server alongside the WebSocket hub. On `SIGINT`/`SIGTERM` it stops the chat hub (closing client connections and flushing presence) and then shuts the HTTP server down with a 10-second timeout.
 
-### Option 2: Without Docker
-1. Configure `.env` with your PostgreSQL credentials:
-   ```bash
-   DB_HOST=localhost
-   DB_USER=postgres
-   DB_PASS=your_password
-   DB_NAME=your_database
-   DB_PORT=5432
-   ```
-2. Run the application:
-   ```bash
-   make migrate      # Run migrations
-   make seed         # Run seeders (optional)
-   make migrate-seed # Run Migrations + Seeder
-   make run          # Start the application
-   ```
-
-## Available Make Commands 🚀
-The project includes a comprehensive Makefile with the following commands:
-
-### Development Commands
-```bash
-make dep          # Install and tidy dependencies
-make run          # Run the application locally
-make build        # Build the application binary
-make run-build    # Build and run the application
-```
-
-### Migration Commands
-```bash
-make migrate                                # Run all pending migrations
-make migrate-status                         # Show migration status
-make migrate-rollback                       # Rollback the last batch
-make migrate-rollback-batch batch=<number>  # Rollback specific batch
-make migrate-rollback-all                   # Rollback all migrations
-make migrate-create name=<migration_name>   # Create new migration file
-```
-
-**Migration Examples:**
-```bash
-make migrate                                 # Run migrations
-make migrate-status                          # Check migration status
-make migrate-rollback                        # Rollback last batch
-make migrate-rollback-batch batch=2          # Rollback batch 2
-make migrate-rollback-all                    # Rollback all migrations
-make migrate-create name=create_posts_table  # Create migration with entity
-```
-
-**Note:** When creating a migration with format `create_*_table`, the system will automatically:
-- Create the entity file in `database/entities/`
-- Add the entity to the migration file
-- Add the entity to `database/migration.go` AutoMigrate section
-
-### Module Generation Commands
-```bash
-make module name=<module_name>  # Generate a new module with all necessary files
-```
-
-**Example:**
-```bash
-make module name=product
-```
-
-This command will automatically create a complete module structure including:
-- Controller (`product_controller.go`)
-- Service (`product_service.go`) 
-- Repository (`product_repository.go`)
-- DTO (`product_dto.go`)
-- Validation (`product_validation.go`)
-- Routes (`routes.go`)
-- Test files for all components
-- Query directory (for custom queries)
-
-## Advanced Usage 🔧
-
-### Running Migrations, Seeders, and Scripts
-You can run migrations, seed the database, and execute scripts while keeping the application running:
-
-```bash
-go run cmd/main.go --migrate:run --seed --run --script:example_script
-```
-
-**Available flags:**
-- `--migrate` or `--migrate:run`: Apply all pending migrations
-- `--migrate:status`: Show migration status
-- `--migrate:rollback`: Rollback the last batch
-- `--migrate:rollback <batch_number>`: Rollback specific batch
-- `--migrate:rollback:all`: Rollback all migrations
-- `--migrate:create:<migration_name>`: Create new migration file
-- `--seed`: Seed the database with initial data
-- `--script:example_script`: Run the specified script (replace `example_script` with your script name)
-- `--run`: Keep the application running after executing the commands above
-
-### Individual Commands
-
-#### Database Migration
-```bash
-go run cmd/main.go --migrate:run                        # Run all pending migrations
-go run cmd/main.go --migrate:status                     # Show migration status
-go run cmd/main.go --migrate:rollback                   # Rollback last batch
-go run cmd/main.go --migrate:rollback 2                 # Rollback batch 2
-go run cmd/main.go --migrate:rollback:all               # Rollback all migrations
-go run cmd/main.go --migrate:create:create_posts_table  # Create migration
-```
-
-**Migration System Features:**
-- **Batch-based migrations**: Similar to Laravel, migrations are grouped in batches
-- **Automatic entity creation**: When creating migration with format `create_*_table`, the system will:
-  - Automatically create entity file in `database/entities/`
-  - Add entity to migration file's AutoMigrate
-  - Add entity to `database/migration.go` AutoMigrate section
-- **Rollback support**: Rollback by batch or rollback all migrations
-- **Status tracking**: View which migrations have been run and their batch numbers
-
-#### Database Seeding
-```bash
-go run cmd/main.go --seed
-```
-This command will populate the database with initial data using the seeders defined in your application.
-
-#### Script Execution
-```bash
-go run cmd/main.go --script:example_script
-```
-Replace `example_script` with the actual script name in **script.go** at the script folder.
-
-> **Note:** If you need the application to continue running after performing migrations, seeding, or executing a script, always append the `--run` option.
-
-
-## Logs Feature 📋
-
-The application includes a built-in logging system that allows you to monitor and track system queries. You can access the logs through a modern, user-friendly interface.
-
-### Accessing Logs
-To view the logs:
-1. Make sure the application is running
-2. Open your browser and navigate to:
-```bash
-http://your-domain/logs
-```
-
-![Logs Interface](https://github.com/user-attachments/assets/adda0afb-a1e4-4e05-b44e-87225fe63309)
-
-### Features
-- **Monthly Filtering**: Filter logs by selecting different months
-- **Real-time Refresh**: Instantly refresh logs with the refresh button
-- **Expandable Entries**: Click on any log entry to view its full content
-- **Modern UI**: Clean and responsive interface with glass-morphism design
-
-## 📖 Documentation
-
-### API Documentation
-Explore the available endpoints and their usage in the [Postman Documentation](https://documenter.getpostman.com/view/29665461/2s9YJaZQCG). This documentation provides a comprehensive overview of the API endpoints, including request and response examples.
-
-### Midtrans Payment
-
-The payment module uses Midtrans Snap. Configure these environment variables:
+## Environment Variables
 
 ```env
-MIDTRANS_SERVER_KEY=SB-Mid-server-...
-MIDTRANS_CLIENT_KEY=SB-Mid-client-...
+APP_NAME=Match.And.Build
+IS_LOGGER=true
+
+DB_HOST=postgres
+DB_USER=postgres
+DB_PASS=<your password>
+DB_NAME=<your database name>
+DB_PORT=5432
+
+NGINX_PORT=80
+GOLANG_PORT=8888
+APP_ENV=localhost          # use "production" to enable strict WS origin checks
+JWT_SECRET=<your secret key>
+
+# Comma-separated allowlist of browser origins permitted to open the WebSocket.
+# Required in production: when empty, browser origins are denied while APP_ENV=production.
+WS_ALLOWED_ORIGIN=https://your-frontend.example.com,http://localhost:3000
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SENDER_NAME="Match and Build <no-reply@testing.com>"
+SMTP_AUTH_EMAIL=<your email>
+SMTP_AUTH_PASSWORD=<your password>
+
+IMAGEKIT_PUBLIC_KEY=<your public key>
+IMAGEKIT_PRIVATE_KEY=<your private key>
+IMAGEKIT_URL_ENDPOINT=<your url endpoint>
+
+MIDTRANS_SERVER_KEY=<your Midtrans server key>
+MIDTRANS_CLIENT_KEY=<your Midtrans client key>
 MIDTRANS_ENVIRONMENT=sandbox
 MIDTRANS_NOTIFICATION_URL=https://your-public-api.example.com/api/v1/payment/notification
 MIDTRANS_FINISH_URL=https://your-frontend.example.com/payment/finish
 MIDTRANS_EXPIRY_MINUTES=60
 ```
 
-Available endpoints:
+## Real-Time Chat (WebSocket)
+
+The chat module exposes both REST endpoints and a WebSocket connection. Messages sent through either path are persisted and broadcast to the other participants through the same hub, so REST and WebSocket stay in sync.
+
+### REST Endpoints
+
+All routes are prefixed with `/api/v1` and require a `Bearer` token.
+
+```text
+GET  /conversations                      List the caller's conversations
+GET  /conversations/:id/messages         Paginated message history (?before=, ?after=, ?limit=)
+POST /conversations/:id/messages         Send a message
+GET  /conversations/:id/unread-count     Unread count for one conversation
+GET  /conversations/unread-count         Total unread count across conversations
+```
+
+### WebSocket Connection
+
+```text
+GET /api/v1/ws
+```
+
+Authentication token is read in the following order:
+1. `Authorization: Bearer <jwt>` header
+2. `Sec-WebSocket-Protocol: bearer, <jwt>` subprotocol
+3. `?token=<jwt>` query parameter (fallback for browser clients)
+
+On connect, the server resolves the user's conversations and joins them automatically, so incoming messages are delivered without an explicit subscribe step. Origin is validated against `WS_ALLOWED_ORIGIN` (exact match); with `APP_ENV=production` and no allowlist configured, browser origins are denied.
+
+### Client → Server Events
+
+| `type` | Payload (`data`) | Description |
+| --- | --- | --- |
+| `message.send` | `conversation_id`, `client_message_id`, `text`, `message_type`, `attachment_url?` | Send a message. `client_message_id` makes the send idempotent on retry. |
+| `message.read` | `conversation_id`, `message_id` | Mark messages as read up to `message_id`. |
+| `typing.start` / `typing.stop` | `conversation_id` | Typing indicator. |
+| `conversation.join` | `conversation_id` | Join a conversation created after connecting. |
+
+### Server → Client Events
+
+| `type` | Description |
+| --- | --- |
+| `message.created` | A new message (also an ACK to the sender, carrying `request_id`). |
+| `message.read` | A participant read up to a message. |
+| `typing.start` / `typing.stop` | A participant's typing state. |
+| `presence.changed` | A peer went online/offline (scoped to shared conversations). |
+| `error` | Validation/authorization failure, with `code` and `message`. |
+
+Each connection is rate limited (50 events/second) and pinged periodically to detect dead connections.
+
+## Make Commands
+
+### Development
+```bash
+make dep          # Install and tidy dependencies
+make run          # Run the application locally
+make build        # Build the binary (./main)
+make run-build    # Build and run
+make module name=<module_name>  # Scaffold a new module
+```
+
+### Migrations
+```bash
+make migrate                                # Run all pending migrations
+make migrate-status                         # Show migration status
+make migrate-rollback                       # Rollback the last batch
+make migrate-rollback-batch batch=<number>  # Rollback a specific batch
+make migrate-rollback-all                   # Rollback all migrations
+make migrate-create name=<migration_name>   # Create a new migration file
+make seed                                   # Run seeders
+make migrate-seed                           # Migrations + seeders
+```
+
+Docker equivalents are available with a `-docker` suffix (e.g. `make migrate-docker`).
+
+**Migration system features:**
+- Batch-based migrations with status tracking and rollback by batch or all.
+- When creating a migration named `create_*_table`, the tooling also scaffolds the entity in `database/entities/` and registers it in `database/migration.go`.
+
+## CLI Flags
+
+Migrations, seeding, and scripts can also be run directly, optionally keeping the server up with `--run`:
+
+```bash
+go run cmd/main.go --migrate:run --seed --run
+```
+
+| Flag | Description |
+| --- | --- |
+| `--migrate` / `--migrate:run` | Apply pending migrations |
+| `--migrate:status` | Show migration status |
+| `--migrate:rollback` | Rollback the last batch |
+| `--migrate:rollback <batch>` | Rollback a specific batch |
+| `--migrate:rollback:all` | Rollback all migrations |
+| `--migrate:create:<name>` | Create a migration file |
+| `--seed` | Seed the database |
+| `--script:<name>` | Run a script registered in `script/` |
+| `--run` | Keep the server running after the above |
+
+## Testing
+
+```bash
+go test ./...                       # Run all tests
+go test ./modules/chat/...          # Run chat module tests
+```
+
+> The race detector (`go test -race`) requires CGO and a C compiler installed.
+
+## Payments (Midtrans)
+
+The payment module uses Midtrans Snap. Endpoints:
 
 ```text
 POST /api/v1/payment/:order_id/snap-token  Bearer token required
@@ -243,12 +254,9 @@ GET  /api/v1/payment/:order_id/status      Bearer token required
 POST /api/v1/payment/notification          Public Midtrans webhook
 ```
 
-Set the Payment Notification URL in the Midtrans dashboard to the same HTTPS
-URL as `MIDTRANS_NOTIFICATION_URL`. The webhook verifies the Midtrans SHA-512
-signature and confirms the transaction using the Get Status API before updating
-the local payment and order.
+Set the Payment Notification URL in the Midtrans dashboard to the same HTTPS URL as `MIDTRANS_NOTIFICATION_URL`. The webhook verifies the Midtrans SHA-512 signature and confirms the transaction via the Get Status API before updating the local payment and order.
 
-The frontend loads the appropriate Snap script and uses the returned token:
+Frontend integration:
 
 ```html
 <script
@@ -260,16 +268,19 @@ The frontend loads the appropriate Snap script and uses the returned token:
 </script>
 ```
 
-For production, set `MIDTRANS_ENVIRONMENT=production` and load
-`https://app.midtrans.com/snap/snap.js`.
+For production, set `MIDTRANS_ENVIRONMENT=production` and load `https://app.midtrans.com/snap/snap.js`.
 
-### Contributing
-We welcome contributions! The repository includes templates for issues and pull requests to standardize contributions and improve the quality of discussions and code reviews.
+## Logs
 
-- **Issue Template**: Helps in reporting bugs or suggesting features by providing a structured format
-- **Pull Request Template**: Guides contributors to provide clear descriptions of changes and testing steps
+A built-in logging interface is available while the application is running:
 
-## 🤝 Contributing
+```text
+http://your-domain/logs
+```
+
+It supports monthly filtering, refresh, and expandable entries.
+
+## Contributing
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
@@ -277,18 +288,15 @@ We welcome contributions! The repository includes templates for issues and pull 
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 🌟 Star History
+## License
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Caknoooo/go-gin-clean-starter&type=date&legend=top-left)](https://www.star-history.com/#Caknoooo/go-gin-clean-starter&type=date&legend=top-left)
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [Gin Web Framework](https://gin-gonic.com/)
 - [GORM](https://gorm.io/)
-- [Samber/do](https://github.com/samber/do) for dependency injection
+- [samber/do](https://github.com/samber/do) for dependency injection
+- [Gorilla WebSocket](https://github.com/gorilla/websocket)
 - [Go Playground Validator](https://github.com/go-playground/validator)
 - [Testify](https://github.com/stretchr/testify) for testing

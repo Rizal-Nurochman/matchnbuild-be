@@ -22,6 +22,16 @@ var (
 	ErrMessageNotFound            = errors.New("message not found")
 	ErrInvalidMessageType         = errors.New("invalid message type")
 	ErrDuplicateMessage           = errors.New("message already sent")
+	ErrEmptyMessage               = errors.New("message text or attachment is required")
+	ErrMessageTextTooLong         = errors.New("message text exceeds 5000 characters")
+	ErrAttachmentURLTooLong       = errors.New("attachment url exceeds 255 characters")
+	ErrClientMessageIDTooLong     = errors.New("client_message_id exceeds 36 characters")
+)
+
+const (
+	MaxMessageTextLength   = 5000
+	MaxAttachmentURLLength = 255
+	MaxClientMessageIDLen  = 36
 )
 
 type (

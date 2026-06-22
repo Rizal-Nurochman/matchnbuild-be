@@ -5,18 +5,20 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Rizal-Nurochman/matchnbuild/database/entities"
 	chatDto "github.com/Rizal-Nurochman/matchnbuild/modules/chat/dto"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/chat/repository"
 	prRepo "github.com/Rizal-Nurochman/matchnbuild/modules/project_request/repository"
+	"github.com/Rizal-Nurochman/matchnbuild/pkg/constants"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 )
 
-// Broadcaster abstracts the websocket hub so the service can push real-time
-// events without importing the websocket package (avoids an import cycle).
+const wsOperationTimeout = 5 * time.Second
+
 type Broadcaster interface {
 	BroadcastToRoomExcept(roomID string, eventType string, data interface{}, excludeUserID string)
 }
@@ -127,6 +129,12 @@ func (s *chatService) GetMessages(ctx context.Context, userID string, conversati
 }
 
 func (s *chatService) SendMessage(ctx context.Context, userID string, conversationID string, req chatDto.SendMessageRequest) (chatDto.MessageResponse, error) {
+	normalized, err := validateSendMessage(req)
+	if err != nil {
+		return chatDto.MessageResponse{}, err
+	}
+	req = normalized
+
 	isParticipant, err := s.conversationParticipantRepo.IsParticipant(ctx, s.db, conversationID, userID)
 	if err != nil {
 		return chatDto.MessageResponse{}, err
@@ -157,10 +165,6 @@ func (s *chatService) SendMessage(ctx context.Context, userID string, conversati
 
 	savedMessage, err := s.messageRepo.Create(ctx, s.db, message)
 	if err != nil {
-		// Idempotency: the unique index (sender_id, client_message_id) rejects
-		// retries with the same client_message_id. Return the existing message
-		// as a success so reconnect/retry does not surface a false failure or
-		// create a duplicate.
 		if isDuplicateKeyErr(err) {
 			existing, getErr := s.messageRepo.GetBySenderAndClientMessageID(ctx, s.db, userID, req.ClientMessageID)
 			if getErr == nil {
@@ -180,9 +184,6 @@ func (s *chatService) SendMessage(ctx context.Context, userID string, conversati
 	return resp, nil
 }
 
-// broadcastMessageCreated pushes a newly created message to every other
-// participant in the conversation room. Shared by both REST and WS paths so
-// real-time delivery behaves identically regardless of how the message was sent.
 func (s *chatService) broadcastMessageCreated(resp chatDto.MessageResponse) {
 	if s.broadcaster == nil {
 		return
@@ -203,23 +204,76 @@ func (s *chatService) broadcastMessageCreated(resp chatDto.MessageResponse) {
 }
 
 func (s *chatService) IsParticipant(userID string, conversationID string) (bool, error) {
-	return s.conversationParticipantRepo.IsParticipant(context.Background(), s.db, conversationID, userID)
+	ctx, cancel := wsContext()
+	defer cancel()
+	return s.conversationParticipantRepo.IsParticipant(ctx, s.db, conversationID, userID)
 }
 
 func (s *chatService) MarkAsRead(userID string, conversationID string, messageID string) error {
-	return s.conversationParticipantRepo.UpdateLastReadMessage(context.Background(), s.db, conversationID, userID, messageID)
+	ctx, cancel := wsContext()
+	defer cancel()
+
+	msg, err := s.messageRepo.GetByID(ctx, s.db, messageID)
+	if err != nil {
+		return chatDto.ErrMessageNotFound
+	}
+	if msg.ConversationID.String() != conversationID {
+		return chatDto.ErrMessageNotFound
+	}
+
+	return s.conversationParticipantRepo.UpdateLastReadMessage(ctx, s.db, conversationID, userID, messageID)
 }
 
 func (s *chatService) SendMessageWS(userID string, conversationID string, req chatDto.SendMessageRequest) (chatDto.MessageResponse, error) {
-	return s.SendMessage(context.Background(), userID, conversationID, req)
+	ctx, cancel := wsContext()
+	defer cancel()
+	return s.SendMessage(ctx, userID, conversationID, req)
 }
 
 func (s *chatService) GetUnreadCount(userID string, conversationID string) (int64, error) {
-	return s.messageRepo.GetUnreadCount(context.Background(), s.db, conversationID, userID)
+	ctx, cancel := wsContext()
+	defer cancel()
+	return s.messageRepo.GetUnreadCount(ctx, s.db, conversationID, userID)
 }
 
 func (s *chatService) GetTotalUnreadCount(userID string) (int64, error) {
-	return s.messageRepo.GetTotalUnreadCount(context.Background(), s.db, userID)
+	ctx, cancel := wsContext()
+	defer cancel()
+	return s.messageRepo.GetTotalUnreadCount(ctx, s.db, userID)
+}
+
+func wsContext() (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), wsOperationTimeout)
+}
+
+func validateSendMessage(req chatDto.SendMessageRequest) (chatDto.SendMessageRequest, error) {
+	req.MessageText = strings.TrimSpace(req.MessageText)
+	req.AttachmentURL = strings.TrimSpace(req.AttachmentURL)
+
+	if req.MessageType == "" {
+		req.MessageType = constants.MESSAGE_TYPE_TEXT
+	}
+	switch req.MessageType {
+	case constants.MESSAGE_TYPE_TEXT, constants.MESSAGE_TYPE_IMAGE, constants.MESSAGE_TYPE_FILE:
+	default:
+		return req, chatDto.ErrInvalidMessageType
+	}
+
+	if req.MessageText == "" && req.AttachmentURL == "" {
+		return req, chatDto.ErrEmptyMessage
+	}
+
+	if len(req.MessageText) > chatDto.MaxMessageTextLength {
+		return req, chatDto.ErrMessageTextTooLong
+	}
+	if len(req.AttachmentURL) > chatDto.MaxAttachmentURLLength {
+		return req, chatDto.ErrAttachmentURLTooLong
+	}
+	if len(req.ClientMessageID) > chatDto.MaxClientMessageIDLen {
+		return req, chatDto.ErrClientMessageIDTooLong
+	}
+
+	return req, nil
 }
 
 func toMessageResponse(msg entities.Message) chatDto.MessageResponse {
@@ -239,8 +293,6 @@ func toMessageResponse(msg entities.Message) chatDto.MessageResponse {
 	return resp
 }
 
-// isDuplicateKeyErr reports whether err is a unique-constraint violation,
-// covering both gorm's translated sentinel and the raw Postgres 23505 code.
 func isDuplicateKeyErr(err error) bool {
 	if err == nil {
 		return false
