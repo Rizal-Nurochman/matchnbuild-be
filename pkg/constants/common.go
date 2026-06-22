@@ -17,6 +17,7 @@ const (
 	// Dependency Injection Keys
 	DB         = "db"
 	JWTService = "JWTService"
+	ChatHub    = "ChatHub"
 
 	// Project Request Status
 	PROJECT_REQUEST_STATUS_OPEN        = "Open"

@@ -20,7 +20,7 @@ type Hub struct {
 	userMsg    chan *UserMessage
 	shutdown   chan struct{}
 	mu         sync.RWMutex
-	onPresence func(userID string, isOnline bool, lastSeenAt *time.Time)
+	onPresence func(userID string, isOnline bool, lastSeenAt *time.Time, roomIDs []string)
 
 	// metrics
 	totalConnections   int64
@@ -29,8 +29,15 @@ type Hub struct {
 	totalErrors        int64
 }
 
-func (h *Hub) SetOnPresence(fn func(userID string, isOnline bool, lastSeenAt *time.Time)) {
+func (h *Hub) SetOnPresence(fn func(userID string, isOnline bool, lastSeenAt *time.Time, roomIDs []string)) {
 	h.onPresence = fn
+}
+
+// offlineEvent carries the data needed to emit a scoped presence update for a
+// user that went offline, including the rooms they were a member of.
+type offlineEvent struct {
+	userID  string
+	roomIDs []string
 }
 
 type ClientRoom struct {
@@ -49,7 +56,7 @@ type UserMessage struct {
 	Payload []byte
 }
 
-func NewHub(onPresence func(userID string, isOnline bool, lastSeenAt *time.Time)) *Hub {
+func NewHub(onPresence func(userID string, isOnline bool, lastSeenAt *time.Time, roomIDs []string)) *Hub {
 	return &Hub{
 		clients:    make(map[*Client]bool),
 		userIndex:  make(map[string]map[*Client]bool),
@@ -81,43 +88,33 @@ func (h *Hub) Run() {
 			}
 			h.userIndex[client.userID][client] = true
 			nowOnline := len(h.userIndex[client.userID]) > 0
+			// Auto-join pre-resolved conversation rooms (race-free: done inside Run goroutine).
+			roomIDs := make([]string, 0, len(client.pendingRooms))
+			for _, roomID := range client.pendingRooms {
+				if h.rooms[roomID] == nil {
+					h.rooms[roomID] = make(map[*Client]bool)
+				}
+				h.rooms[roomID][client] = true
+				client.rooms[roomID] = true
+				roomIDs = append(roomIDs, roomID)
+			}
+			client.pendingRooms = nil
 			atomic.AddInt64(&h.totalConnections, 1)
 			atomic.AddInt64(&h.activeConnections, 1)
 			h.mu.Unlock()
 			log.Printf("[WS] client connected: user=%s total=%d", client.userID, h.ActiveConnections())
 
 			if !wasOnline && nowOnline && h.onPresence != nil {
-				h.onPresence(client.userID, true, nil)
+				h.onPresence(client.userID, true, nil, roomIDs)
 			}
 
 		case client := <-h.unregister:
 			h.mu.Lock()
-			if _, ok := h.clients[client]; ok {
-				delete(h.clients, client)
-				atomic.AddInt64(&h.activeConnections, -1)
-				if conns, ok := h.userIndex[client.userID]; ok {
-					delete(conns, client)
-					nowOnline := len(conns) > 0
-					if len(conns) == 0 {
-						delete(h.userIndex, client.userID)
-					}
-					if !nowOnline && h.onPresence != nil {
-						now := time.Now()
-						h.onPresence(client.userID, false, &now)
-					}
-				}
-				for roomID := range client.rooms {
-					if room, ok := h.rooms[roomID]; ok {
-						delete(room, client)
-						if len(room) == 0 {
-							delete(h.rooms, roomID)
-						}
-					}
-				}
-				client.Close()
-			}
+			ev := h.removeClientLocked(client)
 			h.mu.Unlock()
 			log.Printf("[WS] client disconnected: user=%s total=%d", client.userID, h.ActiveConnections())
+
+			h.notifyOffline([]offlineEvent{ev})
 
 		case cr := <-h.joinRoom:
 			h.mu.Lock()
@@ -142,9 +139,9 @@ func (h *Hub) Run() {
 
 		case msg := <-h.broadcast:
 			atomic.AddInt64(&h.totalMessages, 1)
-			h.mu.RLock()
-			room, ok := h.rooms[msg.RoomID]
-			if ok {
+			var dead []*Client
+			h.mu.Lock()
+			if room, ok := h.rooms[msg.RoomID]; ok {
 				for client := range room {
 					if client.userID == msg.Exclude {
 						continue
@@ -152,28 +149,96 @@ func (h *Hub) Run() {
 					select {
 					case client.send <- msg.Payload:
 					default:
-						close(client.send)
-						delete(room, client)
+						dead = append(dead, client)
 					}
 				}
 			}
-			h.mu.RUnlock()
+			offline := h.removeClientsLocked(dead)
+			h.mu.Unlock()
+			h.notifyOffline(offline)
 
 		case msg := <-h.userMsg:
 			atomic.AddInt64(&h.totalMessages, 1)
-			h.mu.RLock()
+			var dead []*Client
+			h.mu.Lock()
 			if conns, ok := h.userIndex[msg.UserID]; ok {
 				for client := range conns {
 					select {
 					case client.send <- msg.Payload:
 					default:
-						close(client.send)
-						delete(conns, client)
+						dead = append(dead, client)
 					}
 				}
 			}
-			h.mu.RUnlock()
+			offline := h.removeClientsLocked(dead)
+			h.mu.Unlock()
+			h.notifyOffline(offline)
 		}
+	}
+}
+
+// removeClientLocked removes a client from all hub indexes and closes it.
+// It must be called with h.mu held for writing. The returned offlineEvent has a
+// non-empty userID only if the user transitioned from online to offline, in
+// which case roomIDs lists the rooms that client was a member of.
+func (h *Hub) removeClientLocked(client *Client) offlineEvent {
+	if _, ok := h.clients[client]; !ok {
+		return offlineEvent{}
+	}
+	delete(h.clients, client)
+	atomic.AddInt64(&h.activeConnections, -1)
+
+	wentOffline := false
+	if conns, ok := h.userIndex[client.userID]; ok {
+		delete(conns, client)
+		if len(conns) == 0 {
+			delete(h.userIndex, client.userID)
+			wentOffline = true
+		}
+	}
+
+	roomIDs := make([]string, 0, len(client.rooms))
+	for roomID := range client.rooms {
+		roomIDs = append(roomIDs, roomID)
+		if room, ok := h.rooms[roomID]; ok {
+			delete(room, client)
+			if len(room) == 0 {
+				delete(h.rooms, roomID)
+			}
+		}
+	}
+	client.Close()
+
+	if !wentOffline {
+		return offlineEvent{}
+	}
+	return offlineEvent{userID: client.userID, roomIDs: roomIDs}
+}
+
+// removeClientsLocked removes multiple clients and returns the offline events
+// for users that transitioned to offline. Must be called with h.mu held for writing.
+func (h *Hub) removeClientsLocked(clients []*Client) []offlineEvent {
+	var offline []offlineEvent
+	for _, c := range clients {
+		if ev := h.removeClientLocked(c); ev.userID != "" {
+			offline = append(offline, ev)
+		}
+	}
+	return offline
+}
+
+// notifyOffline fires the presence callback for users that went offline.
+// It must be called WITHOUT holding h.mu to avoid re-entrant lock deadlocks.
+func (h *Hub) notifyOffline(events []offlineEvent) {
+	if h.onPresence == nil {
+		return
+	}
+	for _, ev := range events {
+		if ev.userID == "" {
+			continue
+		}
+		now := time.Now()
+		h.onPresence(ev.userID, false, &now, ev.roomIDs)
 	}
 }
 
@@ -240,6 +305,45 @@ func (h *Hub) BroadcastToRoomExcept(roomID string, eventType string, data interf
 	h.BroadcastToRoom(roomID, payload, excludeUserID)
 }
 
+// BroadcastToRooms sends an event to every client across the given rooms,
+// deduping clients that belong to more than one of them and skipping the
+// excluded user. Used to scope presence updates to a user's conversation peers
+// instead of a global fan-out. Reads maps under RLock only; sends are
+// non-blocking and never mutate maps, so this is safe alongside the Run loop.
+func (h *Hub) BroadcastToRooms(roomIDs []string, eventType string, data interface{}, excludeUserID string) {
+	if len(roomIDs) == 0 {
+		return
+	}
+	resp := map[string]interface{}{
+		"type": eventType,
+		"data": data,
+	}
+	payload, err := json.Marshal(resp)
+	if err != nil {
+		return
+	}
+
+	seen := make(map[*Client]bool)
+	h.mu.RLock()
+	for _, roomID := range roomIDs {
+		room, ok := h.rooms[roomID]
+		if !ok {
+			continue
+		}
+		for client := range room {
+			if client.userID == excludeUserID || seen[client] {
+				continue
+			}
+			seen[client] = true
+			select {
+			case client.send <- payload:
+			default:
+			}
+		}
+	}
+	h.mu.RUnlock()
+}
+
 func (h *Hub) SendToUserEvent(userID string, eventType string, data interface{}) {
 	resp := map[string]interface{}{
 		"type": eventType,
@@ -265,13 +369,24 @@ func (h *Hub) IsUserOnline(userID string) bool {
 func (h *Hub) JoinUserToRoom(userID string, roomID string) {
 	h.mu.RLock()
 	conns := h.userIndex[userID]
+	clients := make([]*Client, 0, len(conns))
+	for client := range conns {
+		clients = append(clients, client)
+	}
 	h.mu.RUnlock()
 
-	for client := range conns {
+	for _, client := range clients {
 		h.joinRoom <- &ClientRoom{
 			Client: client,
 			RoomID: roomID,
 		}
+	}
+}
+
+func (h *Hub) JoinClientToRoom(client *Client, roomID string) {
+	h.joinRoom <- &ClientRoom{
+		Client: client,
+		RoomID: roomID,
 	}
 }
 

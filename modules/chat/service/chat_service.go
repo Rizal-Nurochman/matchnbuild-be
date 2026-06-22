@@ -2,15 +2,24 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/Rizal-Nurochman/matchnbuild/database/entities"
 	chatDto "github.com/Rizal-Nurochman/matchnbuild/modules/chat/dto"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/chat/repository"
 	prRepo "github.com/Rizal-Nurochman/matchnbuild/modules/project_request/repository"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 )
+
+// Broadcaster abstracts the websocket hub so the service can push real-time
+// events without importing the websocket package (avoids an import cycle).
+type Broadcaster interface {
+	BroadcastToRoomExcept(roomID string, eventType string, data interface{}, excludeUserID string)
+}
 
 type ChatService interface {
 	GetConversations(ctx context.Context, userID string) ([]chatDto.ConversationResponse, error)
@@ -21,6 +30,7 @@ type ChatService interface {
 	SendMessageWS(userID string, conversationID string, req chatDto.SendMessageRequest) (chatDto.MessageResponse, error)
 	GetUnreadCount(userID string, conversationID string) (int64, error)
 	GetTotalUnreadCount(userID string) (int64, error)
+	SetBroadcaster(b Broadcaster)
 }
 
 type chatService struct {
@@ -28,6 +38,7 @@ type chatService struct {
 	conversationParticipantRepo prRepo.ConversationParticipantRepository
 	conversationRepo           prRepo.ConversationRepository
 	db                         *gorm.DB
+	broadcaster                Broadcaster
 }
 
 func NewChatService(
@@ -42,6 +53,10 @@ func NewChatService(
 		conversationRepo:           conversationRepo,
 		db:                         db,
 	}
+}
+
+func (s *chatService) SetBroadcaster(b Broadcaster) {
+	s.broadcaster = b
 }
 
 func (s *chatService) GetConversations(ctx context.Context, userID string) ([]chatDto.ConversationResponse, error) {
@@ -142,6 +157,16 @@ func (s *chatService) SendMessage(ctx context.Context, userID string, conversati
 
 	savedMessage, err := s.messageRepo.Create(ctx, s.db, message)
 	if err != nil {
+		// Idempotency: the unique index (sender_id, client_message_id) rejects
+		// retries with the same client_message_id. Return the existing message
+		// as a success so reconnect/retry does not surface a false failure or
+		// create a duplicate.
+		if isDuplicateKeyErr(err) {
+			existing, getErr := s.messageRepo.GetBySenderAndClientMessageID(ctx, s.db, userID, req.ClientMessageID)
+			if getErr == nil {
+				return toMessageResponse(existing), nil
+			}
+		}
 		return chatDto.MessageResponse{}, err
 	}
 
@@ -150,7 +175,31 @@ func (s *chatService) SendMessage(ctx context.Context, userID string, conversati
 		return chatDto.MessageResponse{}, err
 	}
 
-	return toMessageResponse(savedMessage), nil
+	resp := toMessageResponse(savedMessage)
+	s.broadcastMessageCreated(resp)
+	return resp, nil
+}
+
+// broadcastMessageCreated pushes a newly created message to every other
+// participant in the conversation room. Shared by both REST and WS paths so
+// real-time delivery behaves identically regardless of how the message was sent.
+func (s *chatService) broadcastMessageCreated(resp chatDto.MessageResponse) {
+	if s.broadcaster == nil {
+		return
+	}
+
+	created := chatDto.MessageCreatedData{
+		ID:             resp.ID,
+		ConversationID: resp.ConversationID,
+		SenderID:       resp.SenderID,
+		SenderName:     resp.SenderName,
+		ClientMessageID: resp.ClientMessageID,
+		MessageType:    resp.MessageType,
+		Text:           resp.MessageText,
+		AttachmentURL:  resp.AttachmentURL,
+		CreatedAt:      resp.CreatedAt,
+	}
+	s.broadcaster.BroadcastToRoomExcept(resp.ConversationID, chatDto.EVENT_MESSAGE_CREATED, created, resp.SenderID)
 }
 
 func (s *chatService) IsParticipant(userID string, conversationID string) (bool, error) {
@@ -188,4 +237,21 @@ func toMessageResponse(msg entities.Message) chatDto.MessageResponse {
 		resp.ClientMessageID = msg.ClientMessageID
 	}
 	return resp
+}
+
+// isDuplicateKeyErr reports whether err is a unique-constraint violation,
+// covering both gorm's translated sentinel and the raw Postgres 23505 code.
+func isDuplicateKeyErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, gorm.ErrDuplicatedKey) {
+		return true
+	}
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		return true
+	}
+	return strings.Contains(err.Error(), "23505") ||
+		strings.Contains(strings.ToLower(err.Error()), "unique constraint")
 }

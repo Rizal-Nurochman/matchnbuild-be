@@ -1,12 +1,18 @@
 package main
 
 import (
+	"context"
 	"log"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/Rizal-Nurochman/matchnbuild/middlewares"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/auth"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/chat"
+	chatWs "github.com/Rizal-Nurochman/matchnbuild/modules/chat/websocket"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/design_item"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/designer"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/payment"
@@ -16,6 +22,7 @@ import (
 	"github.com/Rizal-Nurochman/matchnbuild/modules/upload"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/user"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/user_preferences"
+	"github.com/Rizal-Nurochman/matchnbuild/pkg/constants"
 	"github.com/Rizal-Nurochman/matchnbuild/providers"
 	"github.com/Rizal-Nurochman/matchnbuild/script"
 	"github.com/samber/do"
@@ -33,7 +40,7 @@ func args(injector *do.Injector) bool {
 	return true
 }
 
-func run(server *gin.Engine) {
+func run(server *gin.Engine, injector *do.Injector) {
 	server.Static("/assets", "./assets")
 
 	port := os.Getenv("GOLANG_PORT")
@@ -51,9 +58,38 @@ func run(server *gin.Engine) {
 	myFigure := figure.NewColorFigure("Caknoo", "", "green", true)
 	myFigure.Print()
 
-	if err := server.Run(serve); err != nil {
-		log.Fatalf("error running server: %v", err)
+	httpServer := &http.Server{
+		Addr:    serve,
+		Handler: server,
 	}
+
+	// Run the HTTP server in the background so we can listen for OS signals and
+	// shut everything down gracefully.
+	go func() {
+		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("error running server: %v", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("shutting down server...")
+
+	// Stop the websocket hub first so all client connections are closed and
+	// presence/last_seen is flushed before the process exits.
+	if hub, err := do.InvokeNamed[*chatWs.Hub](injector, constants.ChatHub); err == nil {
+		hub.Shutdown()
+		log.Println("[WS] Hub stopped")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := httpServer.Shutdown(ctx); err != nil {
+		log.Printf("forced shutdown: %v", err)
+	}
+
+	log.Println("server exited")
 }
 
 func main() {
@@ -86,5 +122,5 @@ func main() {
 		recommendation.RegisterRoutes(v1, injector)
 	}
 
-	run(server)
+	run(server, injector)
 }

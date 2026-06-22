@@ -24,6 +24,7 @@ type Client struct {
 	userID       string
 	send         chan []byte
 	rooms        map[string]bool
+	pendingRooms []string
 	mu           sync.RWMutex
 	rateLimiter  *RateLimiter
 	closeOnce    sync.Once
@@ -81,6 +82,10 @@ func NewClient(hub *Hub, conn *websocket.Conn, userID string) *Client {
 		rooms:       make(map[string]bool),
 		rateLimiter: NewRateLimiter(maxEventsPerSec, time.Second),
 	}
+}
+
+func (c *Client) SetPendingRooms(roomIDs []string) {
+	c.pendingRooms = roomIDs
 }
 
 func (c *Client) JoinRoom(roomID string) {

@@ -13,6 +13,7 @@ const (
 	EVENT_TYPING_START     	= "typing.start"
 	EVENT_TYPING_STOP      	= "typing.stop"
 	EVENT_PRESENCE_CHANGED 	= "presence.changed"
+	EVENT_CONVERSATION_JOIN = "conversation.join"
 	EVENT_ERROR            	= "error"
 )
 
@@ -61,6 +62,10 @@ type (
 	TypingData struct {
 		ConversationID string `json:"conversation_id"`
 		UserID         string `json:"user_id"`
+	}
+
+	ConversationJoinData struct {
+		ConversationID string `json:"conversation_id"`
 	}
 
 	PresenceChangedData struct {

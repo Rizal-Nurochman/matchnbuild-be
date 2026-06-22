@@ -78,6 +78,19 @@ func (h *Handler) HandleWebSocket(ctx *gin.Context) {
 	}
 
 	client := NewClient(h.hub, conn, userID)
+
+	// Resolve conversations the user participates in so the hub can auto-join
+	// their rooms on register. Without this, room broadcasts never reach peers.
+	if convs, cErr := h.chatSvc.GetConversations(ctx.Request.Context(), userID); cErr == nil {
+		roomIDs := make([]string, 0, len(convs))
+		for _, c := range convs {
+			roomIDs = append(roomIDs, c.ID)
+		}
+		client.SetPendingRooms(roomIDs)
+	} else {
+		log.Printf("[WS] failed to preload conversations for user=%s: %v", userID, cErr)
+	}
+
 	h.hub.register <- client
 
 	go client.WritePump()
@@ -101,6 +114,8 @@ func (h *Handler) handleEvent(client *Client, msg IncomingMessage) {
 		h.handleTyping(client, msg, true)
 	case chatDto.EVENT_TYPING_STOP:
 		h.handleTyping(client, msg, false)
+	case chatDto.EVENT_CONVERSATION_JOIN:
+		h.handleConversationJoin(client, msg)
 	default:
 		h.sendError(client, msg.RequestID, "UNKNOWN_EVENT", "unknown event type")
 	}
@@ -155,17 +170,18 @@ func (h *Handler) handleMessageSend(client *Client, msg IncomingMessage) {
 		CreatedAt:       resp.CreatedAt,
 	}
 
+	// ACK back to the sender (carries request_id so the client can reconcile its
+	// optimistic message). Fan-out to other participants is handled inside the
+	// service's SendMessage so REST and WS share one broadcast path.
 	ackPayload, _ := json.Marshal(map[string]interface{}{
-		"type": chatDto.EVENT_MESSAGE_CREATED,
-		"data": createdData,
+		"type":       chatDto.EVENT_MESSAGE_CREATED,
+		"data":       createdData,
 		"request_id": msg.RequestID,
 	})
 	select {
 	case client.send <- ackPayload:
 	default:
 	}
-
-	h.hub.BroadcastToRoomExcept(data.ConversationID, chatDto.EVENT_MESSAGE_CREATED, createdData, client.UserID())
 }
 
 func (h *Handler) handleMessageRead(client *Client, msg IncomingMessage) {
@@ -213,6 +229,31 @@ func (h *Handler) handleTyping(client *Client, msg IncomingMessage, isTyping boo
 	}, client.UserID())
 }
 
+func (h *Handler) handleConversationJoin(client *Client, msg IncomingMessage) {
+	var data chatDto.ConversationJoinData
+	if err := json.Unmarshal(msg.Data, &data); err != nil {
+		h.sendError(client, msg.RequestID, "INVALID_PAYLOAD", "invalid join data")
+		return
+	}
+
+	if data.ConversationID == "" {
+		h.sendError(client, msg.RequestID, "INVALID_PAYLOAD", "conversation_id required")
+		return
+	}
+
+	isParticipant, err := h.chatSvc.IsParticipant(client.UserID(), data.ConversationID)
+	if err != nil {
+		h.sendError(client, msg.RequestID, "SERVER_ERROR", "failed to verify participant")
+		return
+	}
+	if !isParticipant {
+		h.sendError(client, msg.RequestID, "FORBIDDEN", "you are not a participant of this conversation")
+		return
+	}
+
+	h.hub.JoinClientToRoom(client, data.ConversationID)
+}
+
 func (h *Handler) sendError(client *Client, requestID string, code string, message string) {
 	payload, _ := json.Marshal(map[string]interface{}{
 		"type": chatDto.EVENT_ERROR,
@@ -238,7 +279,7 @@ func (h *Handler) JoinUserToRoom(conversationID string, userID string) bool {
 	return true
 }
 
-func (h *Handler) handlePresenceChange(userID string, isOnline bool, lastSeenAt *time.Time) {
+func (h *Handler) handlePresenceChange(userID string, isOnline bool, lastSeenAt *time.Time, roomIDs []string) {
 	ctx := context.Background()
 
 	if !isOnline && lastSeenAt != nil {
@@ -248,9 +289,11 @@ func (h *Handler) handlePresenceChange(userID string, isOnline bool, lastSeenAt 
 		}
 	}
 
-	h.hub.BroadcastToAllUsers(chatDto.EVENT_PRESENCE_CHANGED, chatDto.PresenceChangedData{
+	// Scope presence to the user's conversation peers only, instead of a global
+	// fan-out to every connection. Avoids O(N) broadcast storms at scale.
+	h.hub.BroadcastToRooms(roomIDs, chatDto.EVENT_PRESENCE_CHANGED, chatDto.PresenceChangedData{
 		UserID:     userID,
 		IsOnline:   isOnline,
 		LastSeenAt: lastSeenAt,
-	})
+	}, userID)
 }

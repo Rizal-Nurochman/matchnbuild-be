@@ -11,6 +11,7 @@ type (
 	MessageRepository interface {
 		Create(ctx context.Context, tx *gorm.DB, message entities.Message) (entities.Message, error)
 		GetByID(ctx context.Context, tx *gorm.DB, id string) (entities.Message, error)
+		GetBySenderAndClientMessageID(ctx context.Context, tx *gorm.DB, senderID string, clientMessageID string) (entities.Message, error)
 		GetByConversationID(ctx context.Context, tx *gorm.DB, conversationID string, beforeID string, afterID string, limit int) ([]entities.Message, error)
 		GetUnreadCount(ctx context.Context, tx *gorm.DB, conversationID string, userID string) (int64, error)
 		GetTotalUnreadCount(ctx context.Context, tx *gorm.DB, userID string) (int64, error)
@@ -46,6 +47,22 @@ func (r *messageRepository) GetByID(ctx context.Context, tx *gorm.DB, id string)
 	if err := tx.WithContext(ctx).
 		Preload("Sender").
 		Where("id = ?", id).
+		Take(&message).Error; err != nil {
+		return entities.Message{}, err
+	}
+
+	return message, nil
+}
+
+func (r *messageRepository) GetBySenderAndClientMessageID(ctx context.Context, tx *gorm.DB, senderID string, clientMessageID string) (entities.Message, error) {
+	if tx == nil {
+		tx = r.db
+	}
+
+	var message entities.Message
+	if err := tx.WithContext(ctx).
+		Preload("Sender").
+		Where("sender_id = ? AND client_message_id = ?", senderID, clientMessageID).
 		Take(&message).Error; err != nil {
 		return entities.Message{}, err
 	}
