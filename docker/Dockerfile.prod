@@ -18,6 +18,7 @@ RUN apk add --no-cache ca-certificates tzdata
 RUN adduser -D -u 1000 appuser
 
 COPY --from=builder /app/server /app/server
+COPY --from=builder /app/database/seeders/json /app/database/seeders/json
 RUN mkdir -p /app/assets /app/config/logs/query_log \
     && chown -R appuser:appuser /app
 
