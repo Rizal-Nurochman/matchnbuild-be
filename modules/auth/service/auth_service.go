@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 
@@ -102,9 +103,11 @@ func (s *authService) Register(ctx context.Context, req userDto.UserCreateReques
 	}
 
 	go func() {
-		_ = s.SendVerificationEmail(context.Background(), userDto.SendVerificationEmailRequest{
+		if err := s.SendVerificationEmail(context.Background(), userDto.SendVerificationEmailRequest{
 			Email: createdUser.Email,
-		})
+		}); err != nil {
+			log.Printf("failed to send verification email to %s: %v", createdUser.Email, err)
+		}
 	}()
 
 	return userDto.UserResponse{
