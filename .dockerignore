@@ -1,4 +1,3 @@
-# Secrets — JANGAN pernah masuk ke image. Di-inject saat runtime via env_file.
 .env
 *.env
 !.env.example
@@ -32,6 +31,6 @@ test.db
 .idea
 .vscode
 
-# Dokumentasi & koleksi API (tidak perlu di image)
+# Dokumentasi & koleksi API
 *.md
 Match and Build Testing API

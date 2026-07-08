@@ -1,17 +1,11 @@
 # syntax=docker/dockerfile:1
 
-# ---- Build stage ----
 FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
-
-# Cache dependency download berdasarkan go.mod/go.sum saja
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy sisa source dan compile jadi binary statis.
-# CGO_ENABLED=0 aman karena project pakai driver pure-Go
-# (glebarez/sqlite & jackc/pgx), tidak butuh libc.
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /app/server ./cmd/main.go
 
@@ -19,20 +13,11 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /app/server ./cmd/main
 FROM alpine:3.20
 
 WORKDIR /app
-
-# ca-certificates: dibutuhkan untuk panggilan HTTPS keluar
-#   (Midtrans, ImageKit, SMTP TLS)
-# tzdata: agar parsing waktu WIB (Asia/Jakarta) benar
 RUN apk add --no-cache ca-certificates tzdata
 
-# Jalankan sebagai non-root
 RUN adduser -D -u 1000 appuser
 
 COPY --from=builder /app/server /app/server
-
-# Direktori yang ditulis saat runtime harus ada & writable:
-# - assets      : static file yang diserve (main.go: server.Static("/assets"))
-# - config/logs : query log GORM (config/logger.go, os.MkdirAll + OpenFile)
 RUN mkdir -p /app/assets /app/config/logs/query_log \
     && chown -R appuser:appuser /app
 

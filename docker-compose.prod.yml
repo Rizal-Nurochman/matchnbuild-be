@@ -1,12 +1,3 @@
-# Docker Compose untuk PRODUKSI (VPS).
-# Jalankan: docker compose -f docker-compose.prod.yml up -d --build
-#
-# Bedanya dengan docker-compose.yml (dev):
-#   - app: build binary (Dockerfile.prod), bukan hot-reload air
-#   - postgres: satu volume, ada healthcheck
-#   - app menunggu postgres sehat, lalu migrate -> serve
-#   - kredensial dibaca dari .env (env_file), DB_HOST dipaksa ke "postgres"
-
 services:
   app:
     build:
@@ -17,18 +8,11 @@ services:
     env_file:
       - .env
     environment:
-      # Override: di jaringan compose, DB diakses via nama service "postgres",
-      # bukan localhost. Jadi .env boleh tetap DB_HOST=localhost untuk dev lokal.
       DB_HOST: postgres
     volumes:
-      # config email & imagekit (viper) membaca file .env secara langsung,
-      # jadi filenya perlu ada di dalam container (read-only).
       - ./.env:/app/.env:ro
-      # persist static assets & query log lintas restart
       - app-assets:/app/assets
       - app-logs:/app/config/logs
-    # Migrasi dulu, baru jalankan server. Kalau migrasi gagal, container
-    # berhenti (fail loud) dan di-restart oleh restart policy.
     command: sh -c "/app/server --migrate:run && /app/server"
     depends_on:
       postgres:
@@ -51,7 +35,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    # Tidak di-expose ke host: DB hanya diakses internal oleh app.
     networks:
       - app-network
 

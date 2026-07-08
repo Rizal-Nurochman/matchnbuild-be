@@ -10,9 +10,6 @@ func init() {
 }
 
 func Up20240613000000AddClientMessageIDToMessages(db *gorm.DB) error {
-	// Idempotent: AutoMigrate (database/migration.go) sudah membuat kolom & index
-	// ini dari entity Message pada DB fresh, jadi pakai IF NOT EXISTS agar migrasi
-	// tidak gagal di DB baru maupun lama.
 	if err := db.Exec("ALTER TABLE messages ADD COLUMN IF NOT EXISTS client_message_id VARCHAR(36)").Error; err != nil {
 		return err
 	}

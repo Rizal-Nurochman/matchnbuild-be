@@ -1,15 +1,3 @@
-# Docker Compose PRODUKSI dengan Caddy (auto-HTTPS).
-# Pakai ini untuk deploy ke VPS dengan domain.
-#
-# Jalankan: docker compose -f docker-compose.caddy.yml up -d --build
-#
-# Syarat WAJIB sebelum up:
-#   1. A record domain (api.revolusi-edukasi.com) sudah mengarah ke IP VPS
-#   2. Port 80 dan 443 terbuka di firewall VPS
-#   3. Domain di docker/caddy/Caddyfile sudah benar
-#
-# Caddy akan otomatis menerbitkan sertifikat SSL saat pertama kali jalan.
-
 services:
   app:
     build:
@@ -59,8 +47,6 @@ services:
       - "443:443"
     volumes:
       - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      # Persist sertifikat SSL & config — WAJIB, agar tidak minta ulang
-      # sertifikat tiap restart (Let's Encrypt punya rate limit).
       - caddy-data:/data
       - caddy-config:/config
     depends_on:
