@@ -8,33 +8,25 @@ services:
     env_file:
       - .env
     environment:
-      DB_HOST: postgres
+      ML_SERVICE_URL: http://ml:8000
     volumes:
       - ./.env:/app/.env:ro
       - app-assets:/app/assets
       - app-logs:/app/config/logs
     command: sh -c "/app/server --migrate:run && /app/server"
-    depends_on:
-      postgres:
-        condition: service_healthy
     networks:
       - app-network
 
-  postgres:
-    image: postgres:16-alpine
-    container_name: matchnbuild-db
+  ml:
+    build:
+      context: ../matchnbuild-ml
+    container_name: matchnbuild-ml
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASS}
-      POSTGRES_DB: ${DB_NAME}
-    volumes:
-      - pg-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=require
+      PORT: 8000
     networks:
       - app-network
 
@@ -55,7 +47,6 @@ services:
       - app-network
 
 volumes:
-  pg-data:
   app-assets:
   app-logs:
   caddy-data:

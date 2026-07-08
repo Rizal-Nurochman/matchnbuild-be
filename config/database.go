@@ -23,7 +23,13 @@ func SetUpDatabaseConnection() *gorm.DB {
 	dbName := os.Getenv("DB_NAME")
 	dbPort := os.Getenv("DB_PORT")
 
-	dsn := fmt.Sprintf("host=%v user=%v password=%v dbname=%v port=%v client_encoding=UTF8", dbHost, dbUser, dbPass, dbName, dbPort)
+	// Neon/managed Postgres butuh sslmode=require. Lokal/Docker pakai disable.
+	dbSSLMode := os.Getenv("DB_SSLMODE")
+	if dbSSLMode == "" {
+		dbSSLMode = "disable"
+	}
+
+	dsn := fmt.Sprintf("host=%v user=%v password=%v dbname=%v port=%v sslmode=%v client_encoding=UTF8", dbHost, dbUser, dbPass, dbName, dbPort, dbSSLMode)
 
 	db, err := gorm.Open(postgres.New(postgres.Config{
 		DSN:                  dsn,
