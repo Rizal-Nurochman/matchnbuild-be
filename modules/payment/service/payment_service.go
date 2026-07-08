@@ -203,6 +203,17 @@ func (s *paymentService) applyStatus(ctx context.Context, status *coreapi.Transa
 			return dto.ErrAmountMismatch
 		}
 
+		current := payment.Status
+
+		if current == constants.PAYMENT_STATUS_REFUND {
+			return nil
+		}
+
+		if (current == constants.PAYMENT_STATUS_SETTLEMENT || current == constants.PAYMENT_STATUS_CAPTURE) &&
+			status.TransactionStatus != "refund" {
+			return nil
+		}
+
 		order, err := s.repository.GetOrderByID(ctx, tx, payment.OrderID.String(), true)
 		if err != nil {
 			return dto.ErrOrderNotFound
