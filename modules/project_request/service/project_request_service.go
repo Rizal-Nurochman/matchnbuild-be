@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Rizal-Nurochman/matchnbuild/database/entities"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/project_request/dto"
@@ -19,6 +20,10 @@ type ProjectRequestService interface {
 	GetByClientID(ctx context.Context, clientID string) ([]dto.ProjectRequestResponse, error)
 	GetByDesignerID(ctx context.Context, designerID string) ([]dto.ProjectRequestResponse, error)
 	GetIncomingByUserID(ctx context.Context, userID string) ([]dto.ProjectRequestResponse, error)
+	MarkAsDone(ctx context.Context, id string, designerUserID string) (dto.ProjectRequestResponse, error)
+	MarkAsCompleted(ctx context.Context, id string, clientID string) (dto.ProjectRequestResponse, error)
+	MarkAsRevision(ctx context.Context, id string, clientID string) (dto.ProjectRequestResponse, error)
+	MarkAsInProgress(ctx context.Context, id string, designerUserID string) (dto.ProjectRequestResponse, error)
 }
 
 type projectRequestService struct {
@@ -211,6 +216,135 @@ func toProjectRequestResponse(pr entities.ProjectRequest) dto.ProjectRequestResp
 		Status:           pr.Status,
 		Quotations:       quotations,
 	}
+}
+
+func (s *projectRequestService) MarkAsDone(ctx context.Context, id string, designerUserID string) (dto.ProjectRequestResponse, error) {
+	pr, err := s.projectRequestRepo.GetByID(ctx, s.db, id)
+	if err != nil {
+		return dto.ProjectRequestResponse{}, dto.ErrProjectRequestNotFound
+	}
+
+	designerProfile, err := s.designerProfileRepo.GetByUserID(ctx, s.db, designerUserID)
+	if err != nil {
+		return dto.ProjectRequestResponse{}, dto.ErrDesignerProfileNotFound
+	}
+	if pr.DesignerID.String() != designerProfile.ID.String() {
+		return dto.ProjectRequestResponse{}, dto.ErrNotProjectRequestDesigner
+	}
+	if pr.Status != constants.PROJECT_REQUEST_STATUS_IN_PROGRESS {
+		return dto.ProjectRequestResponse{}, dto.ErrInvalidStatusTransition
+	}
+
+	if err := s.projectRequestRepo.UpdateStatus(ctx, s.db, id, constants.PROJECT_REQUEST_STATUS_DONE); err != nil {
+		return dto.ProjectRequestResponse{}, err
+	}
+
+	updated, err := s.projectRequestRepo.GetByID(ctx, s.db, id)
+	if err != nil {
+		return dto.ProjectRequestResponse{}, err
+	}
+	return toProjectRequestResponse(updated), nil
+}
+
+func (s *projectRequestService) MarkAsCompleted(ctx context.Context, id string, clientID string) (dto.ProjectRequestResponse, error) {
+	pr, err := s.projectRequestRepo.GetByID(ctx, s.db, id)
+	if err != nil {
+		return dto.ProjectRequestResponse{}, dto.ErrProjectRequestNotFound
+	}
+	if pr.ClientID.String() != clientID {
+		return dto.ProjectRequestResponse{}, dto.ErrNotProjectRequestClient
+	}
+	if pr.Status != constants.PROJECT_REQUEST_STATUS_DONE {
+		return dto.ProjectRequestResponse{}, dto.ErrInvalidStatusTransition
+	}
+
+	tx := s.db.WithContext(ctx).Begin()
+	if tx.Error != nil {
+		return dto.ProjectRequestResponse{}, tx.Error
+	}
+
+	// Update order.work_status → Completed untuk quotation yang accepted
+	for _, q := range pr.Quotations {
+		if q.Status == constants.QUOTATION_STATUS_ACCEPTED {
+			now := time.Now()
+			if err := tx.Model(&entities.Order{}).
+				Where("quotation_id = ?", q.ID).
+				Updates(map[string]interface{}{
+					"work_status":  constants.ORDER_WORK_STATUS_COMPLETED,
+					"completed_at": now,
+				}).Error; err != nil {
+				tx.Rollback()
+				return dto.ProjectRequestResponse{}, err
+			}
+			break
+		}
+	}
+
+	if err := s.projectRequestRepo.UpdateStatus(ctx, tx, id, constants.PROJECT_REQUEST_STATUS_COMPLETED); err != nil {
+		tx.Rollback()
+		return dto.ProjectRequestResponse{}, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return dto.ProjectRequestResponse{}, err
+	}
+
+	updated, err := s.projectRequestRepo.GetByID(ctx, s.db, id)
+	if err != nil {
+		return dto.ProjectRequestResponse{}, err
+	}
+	return toProjectRequestResponse(updated), nil
+}
+
+func (s *projectRequestService) MarkAsRevision(ctx context.Context, id string, clientID string) (dto.ProjectRequestResponse, error) {
+	pr, err := s.projectRequestRepo.GetByID(ctx, s.db, id)
+	if err != nil {
+		return dto.ProjectRequestResponse{}, dto.ErrProjectRequestNotFound
+	}
+	if pr.ClientID.String() != clientID {
+		return dto.ProjectRequestResponse{}, dto.ErrNotProjectRequestClient
+	}
+	if pr.Status != constants.PROJECT_REQUEST_STATUS_DONE {
+		return dto.ProjectRequestResponse{}, dto.ErrInvalidStatusTransition
+	}
+
+	if err := s.projectRequestRepo.UpdateStatus(ctx, s.db, id, constants.PROJECT_REQUEST_STATUS_REVISION); err != nil {
+		return dto.ProjectRequestResponse{}, err
+	}
+
+	updated, err := s.projectRequestRepo.GetByID(ctx, s.db, id)
+	if err != nil {
+		return dto.ProjectRequestResponse{}, err
+	}
+	return toProjectRequestResponse(updated), nil
+}
+
+func (s *projectRequestService) MarkAsInProgress(ctx context.Context, id string, designerUserID string) (dto.ProjectRequestResponse, error) {
+	pr, err := s.projectRequestRepo.GetByID(ctx, s.db, id)
+	if err != nil {
+		return dto.ProjectRequestResponse{}, dto.ErrProjectRequestNotFound
+	}
+
+	designerProfile, err := s.designerProfileRepo.GetByUserID(ctx, s.db, designerUserID)
+	if err != nil {
+		return dto.ProjectRequestResponse{}, dto.ErrDesignerProfileNotFound
+	}
+	if pr.DesignerID.String() != designerProfile.ID.String() {
+		return dto.ProjectRequestResponse{}, dto.ErrNotProjectRequestDesigner
+	}
+	if pr.Status != constants.PROJECT_REQUEST_STATUS_REVISION {
+		return dto.ProjectRequestResponse{}, dto.ErrInvalidStatusTransition
+	}
+
+	if err := s.projectRequestRepo.UpdateStatus(ctx, s.db, id, constants.PROJECT_REQUEST_STATUS_IN_PROGRESS); err != nil {
+		return dto.ProjectRequestResponse{}, err
+	}
+
+	updated, err := s.projectRequestRepo.GetByID(ctx, s.db, id)
+	if err != nil {
+		return dto.ProjectRequestResponse{}, err
+	}
+	return toProjectRequestResponse(updated), nil
 }
 
 func toProjectRequestResponses(prs []entities.ProjectRequest) []dto.ProjectRequestResponse {

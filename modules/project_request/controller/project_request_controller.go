@@ -15,6 +15,10 @@ type (
 		GetByID(ctx *gin.Context)
 		GetMyRequests(ctx *gin.Context)
 		GetMyIncomingRequests(ctx *gin.Context)
+		MarkAsDone(ctx *gin.Context)
+		MarkAsCompleted(ctx *gin.Context)
+		MarkAsRevision(ctx *gin.Context)
+		MarkAsInProgress(ctx *gin.Context)
 	}
 
 	projectRequestController struct {
@@ -88,5 +92,89 @@ func (c *projectRequestController) GetMyIncomingRequests(ctx *gin.Context) {
 	}
 
 	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_PROJECT_REQUEST, result)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (c *projectRequestController) MarkAsDone(ctx *gin.Context) {
+	id := ctx.Param("id")
+	userID := ctx.MustGet("user_id").(string)
+
+	result, err := c.projectRequestService.MarkAsDone(ctx.Request.Context(), id, userID)
+	if err != nil {
+		status := http.StatusBadRequest
+		if err == dto.ErrProjectRequestNotFound || err == dto.ErrDesignerProfileNotFound {
+			status = http.StatusNotFound
+		} else if err == dto.ErrNotProjectRequestDesigner {
+			status = http.StatusForbidden
+		}
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_UPDATE_PROJECT_REQUEST, err.Error(), nil)
+		ctx.JSON(status, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_UPDATE_PROJECT_REQUEST, result)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (c *projectRequestController) MarkAsCompleted(ctx *gin.Context) {
+	id := ctx.Param("id")
+	userID := ctx.MustGet("user_id").(string)
+
+	result, err := c.projectRequestService.MarkAsCompleted(ctx.Request.Context(), id, userID)
+	if err != nil {
+		status := http.StatusBadRequest
+		if err == dto.ErrProjectRequestNotFound {
+			status = http.StatusNotFound
+		} else if err == dto.ErrNotProjectRequestClient {
+			status = http.StatusForbidden
+		}
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_UPDATE_PROJECT_REQUEST, err.Error(), nil)
+		ctx.JSON(status, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_UPDATE_PROJECT_REQUEST, result)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (c *projectRequestController) MarkAsRevision(ctx *gin.Context) {
+	id := ctx.Param("id")
+	userID := ctx.MustGet("user_id").(string)
+
+	result, err := c.projectRequestService.MarkAsRevision(ctx.Request.Context(), id, userID)
+	if err != nil {
+		status := http.StatusBadRequest
+		if err == dto.ErrProjectRequestNotFound {
+			status = http.StatusNotFound
+		} else if err == dto.ErrNotProjectRequestClient {
+			status = http.StatusForbidden
+		}
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_UPDATE_PROJECT_REQUEST, err.Error(), nil)
+		ctx.JSON(status, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_UPDATE_PROJECT_REQUEST, result)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (c *projectRequestController) MarkAsInProgress(ctx *gin.Context) {
+	id := ctx.Param("id")
+	userID := ctx.MustGet("user_id").(string)
+
+	result, err := c.projectRequestService.MarkAsInProgress(ctx.Request.Context(), id, userID)
+	if err != nil {
+		status := http.StatusBadRequest
+		if err == dto.ErrProjectRequestNotFound || err == dto.ErrDesignerProfileNotFound {
+			status = http.StatusNotFound
+		} else if err == dto.ErrNotProjectRequestDesigner {
+			status = http.StatusForbidden
+		}
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_UPDATE_PROJECT_REQUEST, err.Error(), nil)
+		ctx.JSON(status, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_UPDATE_PROJECT_REQUEST, result)
 	ctx.JSON(http.StatusOK, res)
 }

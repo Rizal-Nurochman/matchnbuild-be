@@ -54,7 +54,11 @@ func (r *conversationRepository) GetByID(ctx context.Context, tx *gorm.DB, id st
 	}
 
 	var conversation entities.Conversation
-	if err := tx.WithContext(ctx).Where("id = ?", id).Take(&conversation).Error; err != nil {
+	if err := tx.WithContext(ctx).
+		Preload("ProjectRequest.Client").
+		Preload("ProjectRequest.Designer.User").
+		Where("id = ?", id).
+		Take(&conversation).Error; err != nil {
 		return entities.Conversation{}, err
 	}
 

@@ -19,5 +19,9 @@ func RegisterRoutes(server *gin.RouterGroup, injector *do.Injector) {
 		prRoutes.GET("/:id", middlewares.Authenticate(jwtService), prController.GetByID)
 		prRoutes.GET("/my-requests", middlewares.Authenticate(jwtService), prController.GetMyRequests)
 		prRoutes.GET("/incoming", middlewares.Authenticate(jwtService), prController.GetMyIncomingRequests)
+		prRoutes.PATCH("/:id/done", middlewares.Authenticate(jwtService), prController.MarkAsDone)
+		prRoutes.PATCH("/:id/complete", middlewares.Authenticate(jwtService), prController.MarkAsCompleted)
+		prRoutes.PATCH("/:id/revision", middlewares.Authenticate(jwtService), prController.MarkAsRevision)
+		prRoutes.PATCH("/:id/in-progress", middlewares.Authenticate(jwtService), prController.MarkAsInProgress)
 	}
 }

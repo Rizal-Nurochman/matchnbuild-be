@@ -18,9 +18,6 @@ import (
 	prController "github.com/Rizal-Nurochman/matchnbuild/modules/project_request/controller"
 	prRepo "github.com/Rizal-Nurochman/matchnbuild/modules/project_request/repository"
 	prService "github.com/Rizal-Nurochman/matchnbuild/modules/project_request/service"
-	qController "github.com/Rizal-Nurochman/matchnbuild/modules/quotation/controller"
-	qRepo "github.com/Rizal-Nurochman/matchnbuild/modules/quotation/repository"
-	qService "github.com/Rizal-Nurochman/matchnbuild/modules/quotation/service"
 	recController "github.com/Rizal-Nurochman/matchnbuild/modules/recommendation/controller"
 	recService "github.com/Rizal-Nurochman/matchnbuild/modules/recommendation/service"
 	userController "github.com/Rizal-Nurochman/matchnbuild/modules/user/controller"
@@ -57,8 +54,6 @@ func RegisterDependencies(injector *do.Injector) {
 	conversationParticipantRepository := prRepo.NewConversationParticipantRepository(db)
 	conversationRepository := prRepo.NewConversationRepository(db)
 	designerProfileRepository := prRepo.NewDesignerProfileRepository(db)
-	quotationRepository := qRepo.NewQuotationRepository(db)
-	orderRepository := qRepo.NewOrderRepository(db)
 	designerRepository := designerRepo.NewDesignerProfileRepository(db)
 	designItemRepository := desigItemRepo.NewDesignItemRepository(db)
 	userPreferencesRepository := userPreferenceRepo.NewUserPreferenceRepository(db)
@@ -70,7 +65,6 @@ func RegisterDependencies(injector *do.Injector) {
 	userSvc := userService.NewUserService(userRepository, db)
 	authSvc := authService.NewAuthService(userRepository, refreshTokenRepository, jwtService, db)
 	projectRequestSvc := prService.NewProjectRequestService(projectRequestRepository, conversationRepository,  designerProfileRepository, conversationParticipantRepository, db)
-	quotationSvc := qService.NewQuotationService(quotationRepository, orderRepository, projectRequestRepository, designerProfileRepository, db)
 	designerSvc := designerService.NewDesignerProfileService(designerRepository, db)
 	desigItemSvc := desigItemService.NewDesignItemService(designItemRepository, designerRepository, userPreferencesRepository, db)
 	userPrencesSvc := userPreferenceService.NewUserPreferenceService(userPreferencesRepository)
@@ -93,12 +87,6 @@ func RegisterDependencies(injector *do.Injector) {
 	do.Provide(
 		injector, func(i *do.Injector) (prController.ProjectRequestController, error) {
 			return prController.NewProjectRequestController(projectRequestSvc), nil
-		},
-	)
-
-	do.Provide(
-		injector, func(i *do.Injector) (qController.QuotationController, error) {
-			return qController.NewQuotationController(quotationSvc), nil
 		},
 	)
 
