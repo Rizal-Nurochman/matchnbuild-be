@@ -15,10 +15,9 @@ func RunExtension(db *gorm.DB) {
 }
 
 func SetUpDatabaseConnection() *gorm.DB {
-	err := godotenv.Load(".env")
-	if err != nil {
-		panic(err)
-	}
+	// .env opsional — di prod kredensial bisa di-inject via env var
+	// platform. Kalau file tidak ada, lanjut pakai env yang sudah ada.
+	_ = godotenv.Load(".env")
 
 	dbUser := os.Getenv("DB_USER")
 	dbPass := os.Getenv("DB_PASS")

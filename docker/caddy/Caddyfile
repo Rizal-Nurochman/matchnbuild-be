@@ -1,0 +1,20 @@
+# Caddy reverse proxy — auto HTTPS (Let's Encrypt).
+#
+# Caddy otomatis:
+#   - menerbitkan & memperpanjang sertifikat SSL untuk domain di bawah
+#   - redirect HTTP -> HTTPS
+#   - meneruskan WebSocket (/api/v1/ws) tanpa konfigurasi tambahan
+#
+# Syarat: domain di bawah SUDAH mengarah (A record) ke IP VPS ini,
+# dan port 80 + 443 terbuka.
+
+api.revolusi-edukasi.com {
+	reverse_proxy app:8888
+
+	# Batas ukuran upload (design item / chat file). Sesuaikan bila perlu.
+	request_body {
+		max_size 20MB
+	}
+
+	encode gzip
+}

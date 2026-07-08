@@ -1,0 +1,80 @@
+# Docker Compose PRODUKSI dengan Caddy (auto-HTTPS).
+# Pakai ini untuk deploy ke VPS dengan domain.
+#
+# Jalankan: docker compose -f docker-compose.caddy.yml up -d --build
+#
+# Syarat WAJIB sebelum up:
+#   1. A record domain (api.revolusi-edukasi.com) sudah mengarah ke IP VPS
+#   2. Port 80 dan 443 terbuka di firewall VPS
+#   3. Domain di docker/caddy/Caddyfile sudah benar
+#
+# Caddy akan otomatis menerbitkan sertifikat SSL saat pertama kali jalan.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.prod
+    container_name: matchnbuild-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB_HOST: postgres
+    volumes:
+      - ./.env:/app/.env:ro
+      - app-assets:/app/assets
+      - app-logs:/app/config/logs
+    command: sh -c "/app/server --migrate:run && /app/server"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: matchnbuild-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - app-network
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: matchnbuild-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Persist sertifikat SSL & config — WAJIB, agar tidak minta ulang
+      # sertifikat tiap restart (Let's Encrypt punya rate limit).
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+    networks:
+      - app-network
+
+volumes:
+  pg-data:
+  app-assets:
+  app-logs:
+  caddy-data:
+  caddy-config:
+
+networks:
+  app-network:
+    driver: bridge
