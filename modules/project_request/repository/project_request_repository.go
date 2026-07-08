@@ -14,6 +14,7 @@ type (
 		GetByClientID(ctx context.Context, tx *gorm.DB, clientID string) ([]entities.ProjectRequest, error)
 		GetByDesignerID(ctx context.Context, tx *gorm.DB, designerID string) ([]entities.ProjectRequest, error)
 		Update(ctx context.Context, tx *gorm.DB, projectRequest entities.ProjectRequest) (entities.ProjectRequest, error)
+		UpdateStatus(ctx context.Context, tx *gorm.DB, id string, status string) error
 	}
 
 	projectRequestRepository struct {
@@ -98,4 +99,15 @@ func (r *projectRequestRepository) Update(ctx context.Context, tx *gorm.DB, proj
 	}
 
 	return projectRequest, nil
+}
+
+func (r *projectRequestRepository) UpdateStatus(ctx context.Context, tx *gorm.DB, id string, status string) error {
+	if tx == nil {
+		tx = r.db
+	}
+
+	return tx.WithContext(ctx).
+		Model(&entities.ProjectRequest{}).
+		Where("id = ?", id).
+		Update("status", status).Error
 }

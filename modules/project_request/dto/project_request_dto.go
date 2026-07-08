@@ -14,9 +14,12 @@ const (
 )
 
 var (
-	ErrProjectRequestNotFound    = errors.New("project request not found")
-	ErrDesignerProfileNotFound   = errors.New("designer profile not found")
-	ErrCannotRequestOwnDesign    = errors.New("cannot create project request to yourself")
+	ErrProjectRequestNotFound      = errors.New("project request not found")
+	ErrDesignerProfileNotFound     = errors.New("designer profile not found")
+	ErrCannotRequestOwnDesign      = errors.New("cannot create project request to yourself")
+	ErrInvalidStatusTransition     = errors.New("invalid status transition")
+	ErrNotProjectRequestDesigner   = errors.New("you are not the designer of this project request")
+	ErrNotProjectRequestClient     = errors.New("you are not the client of this project request")
 )
 
 type (

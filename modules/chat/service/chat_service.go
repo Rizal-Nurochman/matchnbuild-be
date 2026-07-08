@@ -74,10 +74,27 @@ func (s *chatService) GetConversations(ctx context.Context, userID string) ([]ch
 			continue
 		}
 
+		pr := conv.ProjectRequest
 		resp := chatDto.ConversationResponse{
 			ID:               conv.ID.String(),
 			ProjectRequestID: conv.ProjectRequestID.String(),
 			CreatedAt:        conv.CreatedAt,
+			ProjectRequest: chatDto.ConversationProjectRequestInfo{
+				ID:            pr.ID.String(),
+				Description:   pr.Description,
+				Status:        pr.Status,
+				InitialBudget: pr.InitialBudget.InexactFloat64(),
+			},
+			Client: chatDto.ConversationUserInfo{
+				ID:             pr.Client.ID.String(),
+				Name:           pr.Client.Name,
+				ProfilePicture: pr.Client.ProfilePicture,
+			},
+			Designer: chatDto.ConversationUserInfo{
+				ID:             pr.Designer.UserID.String(),
+				Name:           pr.Designer.User.Name,
+				ProfilePicture: pr.Designer.User.ProfilePicture,
+			},
 		}
 		if conv.OrderID != nil {
 			orderID := conv.OrderID.String()

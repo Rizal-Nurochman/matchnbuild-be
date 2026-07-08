@@ -35,11 +35,27 @@ const (
 )
 
 type (
+	ConversationUserInfo struct {
+		ID             string  `json:"id"`
+		Name           string  `json:"name"`
+		ProfilePicture *string `json:"profile_picture"`
+	}
+
+	ConversationProjectRequestInfo struct {
+		ID            string  `json:"id"`
+		Description   string  `json:"description"`
+		Status        string  `json:"status"`
+		InitialBudget float64 `json:"initial_budget"`
+	}
+
 	ConversationResponse struct {
-		ID               string    `json:"id"`
-		ProjectRequestID string    `json:"project_request_id"`
-		OrderID          *string   `json:"order_id,omitempty"`
-		CreatedAt        time.Time `json:"created_at"`
+		ID             string                          `json:"id"`
+		ProjectRequestID string                        `json:"project_request_id"`
+		OrderID        *string                         `json:"order_id,omitempty"`
+		ProjectRequest ConversationProjectRequestInfo  `json:"project_request"`
+		Client         ConversationUserInfo            `json:"client"`
+		Designer       ConversationUserInfo            `json:"designer"`
+		CreatedAt      time.Time                       `json:"created_at"`
 	}
 
 	SendMessageRequest struct {

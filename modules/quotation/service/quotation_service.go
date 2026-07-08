@@ -2,8 +2,11 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Rizal-Nurochman/matchnbuild/database/entities"
+	chatDto "github.com/Rizal-Nurochman/matchnbuild/modules/chat/dto"
+	chatSvcPkg "github.com/Rizal-Nurochman/matchnbuild/modules/chat/service"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/project_request/repository"
 	"github.com/Rizal-Nurochman/matchnbuild/modules/quotation/dto"
 	quotationRepo "github.com/Rizal-Nurochman/matchnbuild/modules/quotation/repository"
@@ -22,11 +25,13 @@ type QuotationService interface {
 }
 
 type quotationService struct {
-	quotationRepo      quotationRepo.QuotationRepository
-	orderRepo          quotationRepo.OrderRepository
-	projectRequestRepo repository.ProjectRequestRepository
+	quotationRepo       quotationRepo.QuotationRepository
+	orderRepo           quotationRepo.OrderRepository
+	projectRequestRepo  repository.ProjectRequestRepository
 	designerProfileRepo repository.DesignerProfileRepository
-	db                 *gorm.DB
+	conversationRepo    repository.ConversationRepository
+	chatSvc             chatSvcPkg.ChatService
+	db                  *gorm.DB
 }
 
 func NewQuotationService(
@@ -34,6 +39,8 @@ func NewQuotationService(
 	oRepo quotationRepo.OrderRepository,
 	prRepo repository.ProjectRequestRepository,
 	dpRepo repository.DesignerProfileRepository,
+	convRepo repository.ConversationRepository,
+	chatSvc chatSvcPkg.ChatService,
 	db *gorm.DB,
 ) QuotationService {
 	return &quotationService{
@@ -41,6 +48,8 @@ func NewQuotationService(
 		orderRepo:           oRepo,
 		projectRequestRepo:  prRepo,
 		designerProfileRepo: dpRepo,
+		conversationRepo:    convRepo,
+		chatSvc:             chatSvc,
 		db:                  db,
 	}
 }
@@ -101,7 +110,28 @@ func (s *quotationService) Create(ctx context.Context, req dto.QuotationCreateRe
 		return dto.QuotationResponse{}, err
 	}
 
+	s.sendQuotationNotice(ctx, designerID, pr.ID.String(), created)
+
 	return toQuotationResponse(created), nil
+}
+
+func (s *quotationService) sendQuotationNotice(ctx context.Context, senderUserID, projectRequestID string, q entities.Quotation) {
+	if s.chatSvc == nil || s.conversationRepo == nil {
+		return
+	}
+	conv, err := s.conversationRepo.GetByProjectRequestID(ctx, s.db, projectRequestID)
+	if err != nil {
+		return
+	}
+	text := fmt.Sprintf(
+		"[Quotation] Penawaran telah dikirimkan:\n• Scope of Work: %s\n• Harga: Rp %.0f\n• Estimasi Durasi: %d hari\n\nSilakan review dan terima atau tolak penawaran ini.",
+		q.ScopeOfWork, q.OfferedPrice.InexactFloat64(), q.DurationDays,
+	)
+	_, _ = s.chatSvc.SendMessage(ctx, senderUserID, conv.ID.String(), chatDto.SendMessageRequest{
+		ClientMessageID: q.ID.String(),
+		MessageText:     text,
+		MessageType:     constants.MESSAGE_TYPE_TEXT,
+	})
 }
 
 func (s *quotationService) GetByID(ctx context.Context, id string) (dto.QuotationResponse, error) {
