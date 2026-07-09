@@ -59,6 +59,7 @@ func parseOrigins(raw string) []string {
 func (h *Handler) HandleWebSocket(ctx *gin.Context) {
 	origin := ctx.Request.Header.Get("Origin")
 	if !h.isOriginAllowed(origin) {
+		log.Printf("[WS] origin ditolak: %q (allowlist=%v, prod=%v)", origin, h.allowedOrigins, h.isProduction)
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "origin not allowed"})
 		h.hub.IncrementErrors()
 		return
