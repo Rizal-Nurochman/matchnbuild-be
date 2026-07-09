@@ -131,13 +131,14 @@ func (r *designItemRepository) Delete(ctx context.Context, tx *gorm.DB, designIt
 		tx = r.db
 	}
 
-	var designItem entities.DesignItem
-	err := tx.WithContext(ctx).Where("id = ?", designItemID).Delete(&designItem).Error
-	if err != nil {
-		return err
-	}
-
-	return nil
+	// design_item_features FK is RESTRICT, so remove join rows before the parent.
+	return tx.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("design_item_id = ?", designItemID).
+			Delete(&entities.DesignItemFeature{}).Error; err != nil {
+			return err
+		}
+		return tx.Where("id = ?", designItemID).Delete(&entities.DesignItem{}).Error
+	})
 }
 
 func (r *designItemRepository) GetRecommended(ctx context.Context, tx *gorm.DB, style string, budgetMin decimal.Decimal, budgetMax decimal.Decimal, location string, limit int) ([]entities.DesignItem, error) {
